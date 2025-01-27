@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Forum</title>
+    <link rel="icon" href="../static/public/icon.png" type="image/png" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+    <div class="container">
+      <div class="form-container">
+        <img
+          src="../static/public/icon.png"
+          alt="Logo"
+          class="logo"
+          style="display: block; margin: 0 auto 2rem"
+        />
+        <h1 style="text-align: center; margin-bottom: 2rem">Sign Up</h1>
+        <form action="/Sign_Up" method="post" id="signup-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="name"
+              placeholder="Enter your name"
+              name="name"
+              id="username"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              minlength="8"
+              title="Password must be at least 8 characters long."
+              aria-label="Password"
+              aria-describedby="password-help"
+            />
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input
+              type="password"
+              id="confirm-password"
+              name="password"
+              required
+              minlength="8"
+              title="Password must be at least 8 characters long."
+              aria-label="Password"
+              aria-describedby="password-help"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            Sign Up
+          </button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem">
+          Already have an account?
+          <a href="/Sign_In" style="color: var(--primary)">Sign In</a>
+        </p>
+      </div>
+    </div>
+    <script src="../static/utils/theme.js"></script>
+  </body>
+</html>

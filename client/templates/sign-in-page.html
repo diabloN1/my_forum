@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In - Forum</title>
+    <link rel="icon" href="../static/public/icon.png" type="image/png" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+    <div class="container">
+      <div class="form-container">
+        <img
+          src="../static/public/icon.png"
+          alt="Logo"
+          class="logo"
+          style="display: block; margin: 0 auto 2rem"
+        />
+        <h1 style="text-align: center; margin-bottom: 2rem">Sign In</h1>
+        <div
+          id="error-message"
+          style="color: red; text-align: center; margin-bottom: 1rem"
+        ></div>
+        <form action="/Sign_In" method="post" id="signin-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+              title="Please enter a valid email address."
+              aria-label="Email"
+              aria-describedby="email-help"
+            />
+            <span id="email-help" class="sr-only"
+              >Please enter your email address.</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              minlength="8"
+              title="Password must be at least 8 characters long."
+              aria-label="Password"
+              aria-describedby="password-help"
+            />
+            <span id="password-help" class="sr-only"
+              >Please enter your password.</span
+            >
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%"
+            id="submit-button"
+          >
+            Sign In
+          </button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem">
+          Don't have an account?
+          <a href="/Sign_Up" style="color: var(--primary)">Sign Up</a>
+        </p>
+      </div>
+    </div>
+    <script src="../static/utils/theme.js"></script>
+    <script>
+      // Disable the submit button while the form is being processed
+      document
+        .getElementById("signin-form")
+        .addEventListener("submit", function () {
+          document.getElementById("submit-button").disabled = true;
+          document.getElementById("submit-button").textContent =
+            "Signing In...";
+        });
+    </script>
+  </body>
+</html>

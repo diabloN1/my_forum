@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profile - Forum</title>
+    <link rel="icon" href="../static/public/icon.png" type="image/png" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+
+    <div class="container">
+      <div class="form-container" style="max-width: 600px">
+        <h1 style="margin-bottom: 2rem">Edit Profile</h1>
+        <form method="post" id="edit-profile-form">
+          <div class="form-group">
+            <label for="avatar">Profile Picture</label>
+            <div style="display: flex; align-items: center; gap: 1rem">
+              <img
+                src="{{.Image}}"
+                alt="Profile"
+                id="preview-avatar"
+                style="
+                  width: 100px;
+                  height: 100px;
+                  border-radius: 50%;
+                  object-fit: cover;
+                "
+              />
+              <input type="file" id="avatar" accept="image/*" name="image" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              placeholder="{{.Name}}"
+              id="username"
+              name="name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              placeholder="{{.Email}}"
+              id="email"
+              name="email"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-password">New Password (optional)</label>
+            <input type="password" id="new-password" name="password" />
+          </div>
+          <div class="form-group">
+            <label for="confirm-new-password">Confirm New Password</label>
+            <input type="password" id="confirm-new-password" />
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="../static/utils/theme.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const avatarInput = document.getElementById("avatar");
+        const previewAvatar = document.getElementById("preview-avatar");
+
+        avatarInput.addEventListener("change", (event) => {
+          const file = event.target.files[0];
+
+          // Validate the file (optional)
+          if (file) {
+            if (!file.type.startsWith("image/")) {
+              alert("Please select a valid image file.");
+              avatarInput.value = ""; // Reset the input
+              return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+              // 2MB limit
+              alert("File size exceeds 2MB. Please choose a smaller file.");
+              avatarInput.value = ""; // Reset the input
+              return;
+            }
+
+            // Update the preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              previewAvatar.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

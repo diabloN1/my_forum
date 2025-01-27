@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - Forum</title>
+    <link rel="icon" href="../static/public/icon.png" type="image/png" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+
+    <div class="container">
+      <div class="profile-container">
+        <div class="profile-header">
+          <img
+            src="{{.Image}}"
+            alt="Profile"
+            class="profile-avatar"
+            id="profile-avatar"
+          />
+          <div class="profile-info">
+            <h1 id="profile-name">{{.Name}}</h1>
+            <p id="profile-email" style="color: var(--text-secondary)">
+              {{.Email}}
+            </p>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <div class="stat-value">{{.UserPostCount}}</div>
+                <div class="stat-label">Posts</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">{{.UserLikeCount}}</div>
+                <div class="stat-label">Likes</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">{{.UserCommentCount}}</div>
+                <div class="stat-label">Comments</div>
+              </div>
+            </div>
+            <a
+              href="/Update_Profile"
+              class="btn btn-primary"
+              style="margin-top: 1rem; text-decoration: none; width: 8rem"
+              >Edit Profile</a
+            >
+            <form action="/Log_Out" method="post">
+              <button
+                type="submit"
+                class="btn btn-error"
+                style="margin-top: 1rem; width: 8rem"
+              >
+                SignOut
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="posts-grid">
+          <!-- User's posts will be dynamically added here -->
+        </div>
+      </div>
+    </div>
+
+    <script src="../static/utils/theme.js"></script>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ForumBook</title>
+    <link rel="icon" href="../static/public/icon.png" type="image/png" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+
+    <main class="container">
+      {{if .}}
+      <div class="posts-grid">
+        {{range .}}
+        <div
+          class="post-card"
+          onclick="window.location.href='/post/?id={{.ID}}';"
+          style="cursor: pointer"
+        >
+          <img src="{{.Image}}" alt="" class="post-image" />
+          <div class="post-content">
+            <h2 class="post-title">{{.Title}}</h2>
+            <p class="post-description">{{.Content}}</p>
+            <div class="post-meta">
+              <span>Posted by {{.UserName}}</span>
+              <span>{{.Category}}</span>
+            </div>
+            <div class="post-actions">
+              <form action="/IsLike" method="post" class="action-form">
+                <input type="hidden" name="postId" value="{{.ID}}" />
+                <input type="hidden" name="userId" value="{{.UserId}}" />
+                <input type="hidden" name="isLike" value="true" />
+                <button
+                  type="submit"
+                  class="action-btn like-btn"
+                  data-post-id="{{.ID}}"
+                >
+                  👍 <span class="like-count">{{.NbrLike}}</span>
+                </button>
+              </form>
+              <form action="/IsLike" method="post" class="action-form">
+                <input type="hidden" name="postId" value="{{.ID}}" />
+                <input type="hidden" name="userId" value="{{.UserId}}" />
+                <input type="hidden" name="isLike" value="false" />
+                <button
+                  type="submit"
+                  class="action-btn dislike-btn"
+                  data-post-id="{{.ID}}"
+                >
+                  👎 <span class="dislike-count">{{.NbrDislike}}</span>
+                </button>
+              </form>
+              <button class="action-btn comment-btn" data-post-id="{{.ID}}">
+                💬 <span class="comment-count">{{.NbrComment}}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        {{end}}
+      </div>
+      {{else}}
+      <div class="no-posts-message">
+        <h2>There are no Posts Yet</h2>
+      </div>
+      {{end}}
+    </main>
+
+    <script src="../static/utils/theme.js"></script>
+  </body>
+</html>
