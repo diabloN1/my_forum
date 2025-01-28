@@ -35,7 +35,6 @@ func main() {
 	http.HandleFunc("/api/auth/status", Handlers.HandleAuthStatus)
 
 	// Protected routes
-	//////////////////////////////////////////////// HERE /////////////////////////////////////////////////////////////
 	http.HandleFunc("/Comment", middleware.ValidateSession(Handlers.HandleComment))
 	http.HandleFunc("/IsLike", middleware.ValidateSession(Handlers.HandleLikeDislike))
 	http.HandleFunc("/post/", middleware.ValidateSession(Handlers.HandlePostPage))

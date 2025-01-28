@@ -57,36 +57,16 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
     }
 
     // Fetch comments for the post
-    comments, err := Cruds.GetAllComments()
+    postComments, err := Cruds.GetPostComments(postID)
     if err != nil {
         Cruds.ShowError(w, "Failed to fetch comments", http.StatusInternalServerError)
         return
     }
 
-    // Filter comments for this post
-    var postComments []GlobVar.Comment
-    for _, comment := range comments {
-        if comment.PostId == postID {
-            postComments = append(postComments, comment)
-        }
-    }
-
     // Fetch likes and dislikes for the post
-    likesDislikes, err := Cruds.GetAllLikeDislike()
+    likes, dislikes, err := Cruds.GetLikesDislikesByPost(postID)
     if err != nil {
         Cruds.ShowError(w, "Failed to fetch likes/dislikes", http.StatusInternalServerError)
-        return
-    }
-
-    var likes, dislikes int
-    for _, ld := range likesDislikes {
-        if ld.PostId == postID {
-            if ld.IsLike {
-                likes++
-            } else {
-                dislikes++
-            }
-        }
     }
 
     // Prepare the data to be passed to the template

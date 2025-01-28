@@ -147,6 +147,58 @@ func InsertLikeDislike(userId, postId string, isLike bool) {
 	}
 }
 
+func GetPostComments(postId string) ([]GlobVar.Comment, error) {
+	var comments []GlobVar.Comment
+
+	query := `
+		SELECT 
+			comments.id, 
+			comments.post_id, 
+			comments.user_id, 
+			comments.content, 
+			comments.created_at, 
+			comments.updated_at, 
+			users.user_name AS UserName
+		FROM 
+			comments
+		JOIN 
+			users 
+		ON 
+			comments.user_id = users.id
+		WHERE 
+			comments.post_id = ?;
+	`
+
+	rows, err := GlobVar.DB.Query(query, postId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var comment GlobVar.Comment
+		err := rows.Scan(
+			&comment.ID,
+			&comment.PostId,
+			&comment.UserId,
+			&comment.Content,
+			&comment.CreatedAt,
+			&comment.UpdatedAt,
+			&comment.UserName,
+		)
+		if err != nil {
+			log.Printf("Error scanning comment row: %v", err)
+			continue
+		}
+		comments = append(comments, comment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}
 
 func CheckUserLikeDislikeExists(userId, postId string) (bool, bool) {
 	query := `SELECT is_like FROM likeDislike WHERE user_id = ? AND post_id = ?`
