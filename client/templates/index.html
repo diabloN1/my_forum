@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ForumBook</title>
-    <link rel="icon" href="../static/public/icon.png" type="image/png" />
+    <link rel="icon" href="../static/public/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="../static/styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
@@ -16,7 +17,19 @@
 
     <main class="container">
       {{if .}}
-      <div class="posts-grid">
+      <button id="filterButton"><i class="fa fa-filter"></i> Filters</button>
+
+      <div id="filterContainer">
+        <h3>Filters</h3>
+
+        <input type="text" id="searchInput" placeholder="search..." list="searchExemples"/>
+        <datalist id="searchExemples"></datalist>
+        
+        <div id="categoryFilterButtons"></div>
+
+      </div>
+
+      <div class="posts-grid" id="postsContainer">
         {{range .}}
         <div
           class="post-card"
@@ -70,7 +83,10 @@
       </div>
       {{end}}
     </main>
-
+    <script type="application/json" id="postsData">
+      {{.}}
+    </script>
     <script src="../static/utils/theme.js"></script>
+    <script type="module" src="../static/utils/filtersHome.js"></script>
   </body>
 </html>

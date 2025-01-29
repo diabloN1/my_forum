@@ -46,7 +46,6 @@ type Comment struct {
 type Categories struct {
 	ID              string `db:"id" json:"id"`
 	CategoryName    string `db:"category_name" json:"category_name"`
-	CreatedByUserId string `db:"created_by_user_id" json:"created_by_user_id"`
 }
 
 type PostCategory struct {

@@ -609,6 +609,10 @@ body {
   margin-bottom: 0.5rem;
 }
 
+#filterContainer {
+  display: block;
+}
+
 .post-detail-layout {
   display: grid;
   grid-template-columns: 1fr 350px;

@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE TABLE IF NOT EXISTS categories (
     id TEXT UNIQUE PRIMARY KEY,
     category_name TEXT UNIQUE NOT NULL,
-    created_by_user_id TEXT, -- The user who created this category
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by_user_id) REFERENCES users(id)
 );
 

@@ -107,6 +107,8 @@ func InsertUser(name, image, email, password string) string {
 }
 
 func InsertPost(userId, image, title, content, category string) bool {
+	
+	// Insert post
 	id := GenerateUUID()
 	query := `INSERT INTO posts (id, user_id, title, content, image_url, category) VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := GlobVar.DB.Exec(query, id, userId, title, content, image, category)
@@ -114,8 +116,29 @@ func InsertPost(userId, image, title, content, category string) bool {
 		log.Printf("error exec query: %v", err)
 		return false
 	}
+
+	// Insert category if does not exists
+	query = `SELECT count(*) FROM categories WHERE category_name = ?`
+	var exists int
+    err = GlobVar.DB.QueryRow(query, category).Scan(&exists)
+    if err != nil && err != sql.ErrNoRows {
+		fmt.Println(err)
+        return false
+    }
+	if exists == 0 {
+		// Insert post
+			id := GenerateUUID()
+			query := `INSERT INTO categories (id, category_name) VALUES (?, ?)`
+			_, err := GlobVar.DB.Exec(query, id, category)
+			if err != nil {
+				log.Printf("error exec query: %v", err)
+				return false
+			}
+	}
 	return true
 }
+
+
 
 func InsertComment(postId, userId, content string) {
 	id := GenerateUUID()
@@ -127,15 +150,43 @@ func InsertComment(postId, userId, content string) {
 	}
 }
 
-func InsertCategory(byUserId, categoryName string) {
-	id := GenerateUUID()
-	query := `INSERT INTO categories (id, category_name, created_by_user_id) VALUES (?, ?, ?)`
-	_, err := GlobVar.DB.Exec(query, id, categoryName, byUserId)
+func GetCategories() ([]GlobVar.Categories, error) {
+	var categories []GlobVar.Categories
+
+	query := `
+		SELECT 
+			id, 
+			category_name
+		FROM 
+			categories
+	`
+
+	rows, err := GlobVar.DB.Query(query)
 	if err != nil {
-		log.Printf("error exec query: %v", err)
-		return
+		return nil, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var categorie GlobVar.Categories
+		err := rows.Scan(
+			&categorie.ID,
+			&categorie.CategoryName,
+		)
+		if err != nil {
+			log.Printf("Error scanning categorie row: %v", err)
+			continue
+		}
+		categories = append(categories, categorie)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
 }
+
 
 func InsertLikeDislike(userId, postId string, isLike bool) {
 	id := GenerateUUID()

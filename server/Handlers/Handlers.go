@@ -336,6 +336,7 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+    
 	err = tmpl.Execute(w, posts)
 	if err != nil {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
@@ -445,15 +446,18 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    data := Cruds.GetUser(userID)
     if r.Method == http.MethodPost {
+        data := Cruds.GetUser(userID)
         title := r.FormValue("title")
-        // category := r.FormValue("category")
+        categories := r.FormValue("categories")
+        category := r.FormValue("category")
         content := r.FormValue("content")
 
+        if categories != "other" {
+            category = categories
+        }
 
-        
-        if Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, "test") {
+        if category != "" && Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, category) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return
         } else {
@@ -467,6 +471,13 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
         return
     }
+
+    data, err := Cruds.GetCategories()
+    if err != nil {
+        Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
     err = tmpl.Execute(w, data)
     if err != nil {
         Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
