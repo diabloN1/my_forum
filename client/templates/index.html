@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ForumBook</title>
     <link rel="icon" href="../static/public/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.js"></script>
     <link rel="stylesheet" href="../static/styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
@@ -17,16 +19,17 @@
 
     <main class="container">
       {{if .}}
+      Categories <span id="categoryFilterButtons"></span><br/><br/>
       <button id="filterButton"><i class="fa fa-filter"></i> Filters</button>
 
       <div id="filterContainer">
-        <h3>Filters</h3>
+        <!-- <h3>Filters</h3> -->
 
         <input type="text" id="searchInput" placeholder="search..." list="searchExemples"/>
         <datalist id="searchExemples"></datalist>
-        
-        <div id="categoryFilterButtons"></div>
-
+        <br/>
+        Creation date<div id="creationDateFilter"></div>
+        Most rated<div id="likesFilter"></div>
       </div>
 
       <div class="posts-grid" id="postsContainer">
@@ -35,6 +38,7 @@
           class="post-card"
           onclick="window.location.href='/post/?id={{.ID}}';"
           style="cursor: pointer"
+          
         >
           <img src="{{.Image}}" alt="" class="post-image" />
           <div class="post-content">

@@ -614,9 +614,6 @@ type Error struct {
 // Function to render error pages with an HTTP status code
 func ShowError(w http.ResponseWriter, message string, status int) {
 
-    // Set the HTTP status code
-    w.WriteHeader(status)
-
     // Parse the error template
     tmpl, err := template.ParseFiles(filepath.Join(GlobVar.TemplatesPath, "ErrPage.html"))
     if err != nil {
@@ -625,6 +622,9 @@ func ShowError(w http.ResponseWriter, message string, status int) {
         return
     }
 
+	// Set the HTTP status code
+    w.WriteHeader(status)
+	
     httpError := Error{
         Status: status,
         Message: message,
