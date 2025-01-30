@@ -723,3 +723,153 @@ body {
   height: auto;
   object-fit: cover;
 }
+/* Categories container */
+.categories-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Updated gap */
+  margin-bottom: 1rem;
+}
+
+.categories-title {
+  /* New style for categories title */
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Category filter buttons container */
+#categoryFilterButtons {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--surface);
+  flex: 1; /* Take up remaining space */
+}
+
+/* Hide scrollbar for Chrome/Safari while keeping functionality */
+#categoryFilterButtons::-webkit-scrollbar {
+  height: 4px;
+}
+
+#categoryFilterButtons::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 2px;
+}
+
+#categoryFilterButtons::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* Category buttons */
+#categoryFilterButtons button {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+#categoryFilterButtons button:hover,
+#categoryFilterButtons button.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--background);
+}
+
+/* Filter button styling */
+#filterButton {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  transition: background-color 0.2s;
+}
+
+#filterButton:hover {
+  background-color: var(--surface-light);
+}
+
+/* Filter container styling */
+#filterContainer {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Search input styling */
+#searchInput {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+#searchInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Range slider styling */
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.filter-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+#creationDateFilter,
+#likesFilter {
+  margin: 8px 0;
+  height: 15px;
+}
+
+.noUi-connect {
+  background: var(--primary);
+}
+
+.noUi-handle {
+  height: 16px;
+  width: 16px;
+  top: -1px;
+  right: -8px;
+  border-radius: 50%;
+  background-color: var(--text);
+  border: 2px solid var(--primary);
+  box-shadow: none;
+}
+
+.noUi-handle:before,
+.noUi-handle:after {
+  display: none;
+}
+
+.noUi-target {
+  background-color: var(--surface-light);
+  border-color: var(--border);
+  box-shadow: none;
+}
