@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ForumBook</title>
     <link rel="icon" href="../static/public/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.js"></script>
     <link rel="stylesheet" href="../static/styles.css" />
     <link
@@ -19,17 +25,29 @@
 
     <main class="container">
       {{if .}}
-      Categories <span id="categoryFilterButtons"></span><br/><br/>
+      <div class="categories-wrapper">
+        <span class="categories-title">Categories</span>
+        <span id="categoryFilterButtons"></span>
+      </div>
       <button id="filterButton"><i class="fa fa-filter"></i> Filters</button>
 
-      <div id="filterContainer" style="display: none;">
-        <!-- <h3>Filters</h3> -->
-
-        <input type="text" id="searchInput" placeholder="search..." list="searchExemples"/>
+      <div id="filterContainer" style="display: none">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="search..."
+          list="searchExemples"
+        />
         <datalist id="searchExemples"></datalist>
-        <br/>
-        Creation date<div id="creationDateFilter"></div>
-        Most rated<div id="likesFilter"></div>
+        <br />
+        <div class="filter-section">
+          <label for="creationDateFilter">Creation date</label>
+          <div id="creationDateFilter"></div>
+        </div>
+        <div class="filter-section">
+          <label for="likesFilter">Most rated</label>
+          <div id="likesFilter"></div>
+        </div>
       </div>
 
       <div class="posts-grid" id="postsContainer">
@@ -38,7 +56,6 @@
           class="post-card"
           onclick="window.location.href='/post/?id={{.ID}}';"
           style="cursor: pointer"
-          
         >
           <img src="{{.Image}}" alt="" class="post-image" />
           <div class="post-content">
