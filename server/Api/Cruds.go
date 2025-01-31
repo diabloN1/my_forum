@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"forum/GlobVar"
-	cookies "forum/cookies"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -98,7 +97,7 @@ func InsertUser(name, image, email, password string) string {
         return ""
     }
     query := `INSERT INTO users (id, email, user_name, password_hash, user_image) VALUES (?, ?, ?, ?, ?)`
-    _, err = GlobVar.DB.Exec(query, id, email, name, hashedPassword, image)
+    _, err = GlobVar.DB.Exec(query, id, email, "@"+name, hashedPassword, image)
     if err != nil {
         log.Printf("error inserting user: %v", err)
         return ""
@@ -488,11 +487,11 @@ func GetCommentsCountByPost(id string) (int, error) {
 	return commentsCount, nil
 }
 
-func ValidateSessionIDAndGetUserID(sessionID string) (string, bool) {
+func ValidateSessionIDAndGetUserID(sessionID, addr string) (string, bool) {
     var expiresAt time.Time
     var userID string
-    query := `SELECT user_id, expires_at FROM Session WHERE id = ?`
-    err := GlobVar.DB.QueryRow(query, sessionID).Scan(&userID, &expiresAt)
+    query := `SELECT user_id, expires_at FROM Session WHERE id = ? and user_ip = ?`
+    err := GlobVar.DB.QueryRow(query, sessionID, addr).Scan(&userID, &expiresAt)
     if err != nil {
         if err == sql.ErrNoRows {
             return "", false
@@ -510,99 +509,6 @@ func ValidateSessionIDAndGetUserID(sessionID string) (string, bool) {
 
     return userID, true
 }
-
-func Set_Cookies_Handler(w http.ResponseWriter, r *http.Request, userID string) {
-    var sessionID, token string
-    var err error
-
-    // Generate a unique session ID
-    sessionID, err = cookies.Generate_Cookie_session()
-    if err != nil {
-        ShowError(w, "Internal Server Error", http.StatusInternalServerError)
-        log.Printf("Error generating session ID: %v", err)
-        return
-    }
-
-    // Generate a unique token for the session
-    for {
-        token, err = cookies.Generate_Cookie_session()
-        if err != nil {
-            ShowError(w, "Internal Server Error", http.StatusInternalServerError)
-            log.Printf("Error generating session token: %v", err)
-            return
-        }
-
-        // Check if the token already exists in the database
-        var exists bool
-        query := `SELECT EXISTS(SELECT 1 FROM Session WHERE token = ?)`
-        err = GlobVar.DB.QueryRow(query, token).Scan(&exists)
-        if err != nil {
-            ShowError(w, "Internal Server Error", http.StatusInternalServerError)
-            log.Printf("Error checking token existence: %v", err)
-            return
-        }
-
-        if !exists {
-            break // Token is unique, exit the loop
-        }
-    }
-
-    // Insert the session into the database
-    expiresAt := time.Now().Add(7 * 24 * time.Hour) // Session expires in 7 days
-    query := `INSERT INTO Session (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)`
-    _, err = GlobVar.DB.Exec(query, sessionID, userID, token, expiresAt)
-    if err != nil {
-        log.Printf("Error storing session in database: %v", err) // Debugging
-        ShowError(w, "Internal Server Error", http.StatusInternalServerError)
-        return
-    }
-
-    fmt.Println("Session created for user:", userID) // Debugging
-
-    // Set the session cookie
-    cookie := &http.Cookie{
-        Name:     "Session_ID",
-        Value:    sessionID,
-        Path:     "/",
-        Secure:   true,
-        HttpOnly: true,
-        Expires:  expiresAt,
-        SameSite: http.SameSiteStrictMode,
-    }
-    http.SetCookie(w, cookie)
-}
-
-func Delete_Cookie_Handler(w http.ResponseWriter, r *http.Request) {
-	// Get the session cookie
-	cookie, err := r.Cookie("Session_ID")
-	if err != nil {
-		// No session cookie found
-		http.Redirect(w, r, "/Sign_In", http.StatusSeeOther)
-		return
-	}
-
-	// Delete the session from the database
-	query := `DELETE FROM Session WHERE id = ?`
-	_, err = GlobVar.DB.Exec(query, cookie.Value)
-	if err != nil {
-		ShowError(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Printf("Error deleting session from database: %v", err)
-		return
-	}
-
-	// Clear the session cookie
-	cookie = &http.Cookie{
-		Name:     "Session_ID",
-		Value:    "",
-		Path:     "/",
-		Secure:   true,
-		HttpOnly: true,
-		Expires:  time.Now().Add(-1 * time.Hour), // Expire the cookie
-		SameSite: http.SameSiteStrictMode,
-	}
-	http.SetCookie(w, cookie)
-}
-
 
 // ----------- CUSTOM ERROR -----------
 

@@ -495,8 +495,8 @@ func Set_Cookies_Handler(w http.ResponseWriter, r *http.Request, userID string) 
 
 	// Insert the session into the database
 	expiresAt := time.Now().Add(7 * 24 * time.Hour) // Session expires in 7 days
-	query := `INSERT INTO Session (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)`
-	_, err = GlobVar.DB.Exec(query, sessionID, userID, sessionID, expiresAt)
+	query := `INSERT INTO Session (id, user_id, token, user_ip, expires_at) VALUES (?, ?, ?, ?, ?)`
+	_, err = GlobVar.DB.Exec(query, sessionID, userID, sessionID, r.RemoteAddr, expiresAt)
 	if err != nil {
 		Cruds.ShowError(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Printf("Error storing session in database: %v", err)
@@ -551,7 +551,7 @@ func HandleAuthStatus(w http.ResponseWriter, r *http.Request) {
     isAuthenticated := false
     cookie, err := r.Cookie("Session_ID")
     if err == nil {
-        _, isAuthenticated = Cruds.ValidateSessionIDAndGetUserID(cookie.Value)
+        _, isAuthenticated = Cruds.ValidateSessionIDAndGetUserID(cookie.Value, r.RemoteAddr)
     }
 
     w.Header().Set("Content-Type", "application/json")

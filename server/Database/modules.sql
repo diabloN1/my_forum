@@ -37,8 +37,7 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE TABLE IF NOT EXISTS categories (
     id TEXT UNIQUE PRIMARY KEY,
     category_name TEXT UNIQUE NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by_user_id) REFERENCES users(id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 5. PostCategory 🔗​
@@ -67,6 +66,7 @@ CREATE TABLE IF NOT EXISTS Session (
     id TEXT UNIQUE PRIMARY KEY,
     user_id TEXT NOT NULL,
     token TEXT UNIQUE NOT NULL,
+    user_ip TEXT UNIQUE NOT NULL,
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );

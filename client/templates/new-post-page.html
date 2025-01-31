@@ -25,7 +25,6 @@
           <div class="form-group">
             <label for="category">Category</label>
             <select name="categories">
-              <option value="" disabled>Choose your category...</option>
               {{range .}}
               <option value="{{.CategoryName}}">{{.CategoryName}}</option>
               {{end}}

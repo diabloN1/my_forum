@@ -10,12 +10,12 @@ import (
 	middleware "forum/Middleware"
 	"forum/Migrations"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func init() {
 	var err error
-	GlobVar.DB, err = sql.Open("sqlite", "../Database/database.db")
+	GlobVar.DB, err = sql.Open("sqlite3", "../Database/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
