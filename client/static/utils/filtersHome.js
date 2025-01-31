@@ -4,6 +4,7 @@ const categoryFilterButtons = document.getElementById("categoryFilterButtons");
 const filterButton = document.getElementById("filterButton");
 const postsDivs = document.getElementsByClassName('post-card')
 
+
 // Check authentication status and update navbar
 checkAuthStatus().then((isAuthenticated) => {
   if (!isAuthenticated) {

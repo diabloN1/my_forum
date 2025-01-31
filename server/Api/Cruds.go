@@ -106,36 +106,51 @@ func InsertUser(name, image, email, password string) string {
     return id
 }
 
-func InsertPost(userId, image, title, content, category string) bool {
-	
-	// Insert post
-	id := GenerateUUID()
-	query := `INSERT INTO posts (id, user_id, title, content, image_url, category) VALUES (?, ?, ?, ?, ?, ?)`
-	_, err := GlobVar.DB.Exec(query, id, userId, title, content, image, category)
-	if err != nil {
-		log.Printf("error exec query: %v", err)
-		return false
-	}
-
-	// Insert category if does not exists
-	query = `SELECT count(*) FROM categories WHERE category_name = ?`
-	var exists int
-    err = GlobVar.DB.QueryRow(query, category).Scan(&exists)
-    if err != nil && err != sql.ErrNoRows {
-		fmt.Println(err)
+func InsertPost(userId, image, title, content string, categories []string) bool {
+    
+    // Insert post
+    id := GenerateUUID()
+    query := `INSERT INTO posts (id, user_id, title, content, image_url) VALUES (?, ?, ?, ?, ?)`
+    _, err := GlobVar.DB.Exec(query, id, userId, title, content, image)
+    if err != nil {
+        log.Printf("error exec query: %v", err)
         return false
     }
-	if exists == 0 {
-		// Insert post
-			id := GenerateUUID()
-			query := `INSERT INTO categories (id, category_name) VALUES (?, ?)`
-			_, err := GlobVar.DB.Exec(query, id, category)
-			if err != nil {
-				log.Printf("error exec query: %v", err)
-				return false
-			}
-	}
-	return true
+
+    // Insert category if does not exists
+    if err = InsertPostCategories(categories, id); err != nil {
+        return true    
+    }
+    return true
+}
+
+func InsertPostCategories(categories []string, postId string) error {
+    for _, category := range categories {
+        query := `SELECT count(*) FROM categories WHERE category_name = ?`
+        var exists int
+        err := GlobVar.DB.QueryRow(query, category).Scan(&exists)
+        if err != nil && err != sql.ErrNoRows {
+            fmt.Println(err)
+            return err
+        }
+        if exists == 0 {
+            // Insert post
+            id := GenerateUUID()
+            query := `INSERT INTO categories (id, category_name) VALUES (?, ?)`
+            _, err := GlobVar.DB.Exec(query, id, "#"+category)
+            if err != nil {
+                log.Printf("error exec query: %v", err)    
+                return err
+            }
+        }
+        query = `INSERT INTO CategoriesByPost (post_id, category_name) VALUES (?, ?)`
+        _, err = GlobVar.DB.Exec(query, postId, "#"+category)
+        if err != nil {
+            log.Printf("error exec query: %v", err)
+            return err
+        }
+    }
+    return nil
 }
 
 
@@ -314,41 +329,50 @@ func DeleteLikeDislike(userId, postId string, isForComment bool) {
 // 	return true, isLike
 // }
 
-func GetPostByID(postID string) (string, *GlobVar.Post, error) {
-    query := `SELECT id, user_id, image_url, title, content, category, created_at FROM posts WHERE id = ?`
+func GetPostByID(postID string) (*GlobVar.Post, error) {
+    query := `SELECT id, user_id, image_url, title, content, created_at FROM posts WHERE id = ?`
     var post GlobVar.Post
-    err := GlobVar.DB.QueryRow(query, postID).Scan(&post.ID, &post.UserId, &post.Image, &post.Title, &post.Content, &post.Category, &post.CreatedAt)
+    err := GlobVar.DB.QueryRow(query, postID).Scan(&post.ID, &post.UserId, &post.Image, &post.Title, &post.Content, &post.CreatedAt)
     if err != nil {
         if err == sql.ErrNoRows {
-            return "" ,nil, fmt.Errorf("post not found")
+            return nil, fmt.Errorf("post not found")
         }
-        return "" ,nil, err
+        return nil, err
     }
-    return "" ,&post, nil
+
+	holder, err := GetPostCategoriesByPostId(post.ID)
+	post.Categories = holder
+	if err != nil {
+		return nil, fmt.Errorf("cateogories not found")
+	}
+    return &post, nil
 }
 
 // Update Data
-func UpdateUser(email, name, image, password, userId string) {
+func UpdateUser(email, name, image, password, userId string) error {
 	var err error
 	var hashedPassword string
 	if len(password) != 0 {
 		hashedPassword, err = HashPassword(password)
 		if err != nil {
 			log.Printf("error hashing password: %v", err)
-			return
+			return err
 		}
 		query := `UPDATE users SET user_name = ?, user_image = ?, email = ?, password_hash = ? WHERE id = ?`
-		_, err = GlobVar.DB.Exec(query, name, image, email, hashedPassword, userId)
+		_, err = GlobVar.DB.Exec(query, "@"+name, image, email, hashedPassword, userId)
 		if err != nil {
 			log.Printf("error exec query Update: %v", err)
+			return err
 		}
 	} else {
 		query := `UPDATE users SET user_name = ?, user_image = ?, email = ? WHERE id = ?`
-		_, err = GlobVar.DB.Exec(query, name, image, email, userId)
+		_, err = GlobVar.DB.Exec(query, "@"+name, image, email, userId)
 		if err != nil {
 			log.Printf("error exec query Update: %v", err)
+			return err
 		}
 	}
+	return nil
 }
 
 // Get User
@@ -396,7 +420,7 @@ func GetAllUsers() ([]GlobVar.User, error) {
 }
 
 func GetAllPosts() ([]GlobVar.Post, error) {
-	query := `SELECT id, user_id, image_url, title, content, category, created_at FROM posts`
+	query := `SELECT id, user_id, image_url, title, content, created_at FROM posts`
 	
 	rows, err := GlobVar.DB.Query(query)
 	if err != nil {
@@ -407,15 +431,42 @@ func GetAllPosts() ([]GlobVar.Post, error) {
 	var posts []GlobVar.Post
 	for rows.Next() {
 		var post GlobVar.Post
-		if err := rows.Scan(&post.ID, &post.UserId, &post.Image, &post.Title, &post.Content, &post.Category, &post.CreatedAt); err != nil {
+		if err := rows.Scan(&post.ID, &post.UserId, &post.Image, &post.Title, &post.Content, &post.CreatedAt); err != nil {
 			return nil, err
 		}
+		
+		holder, err := GetPostCategoriesByPostId(post.ID)
+		post.Categories = holder
+
+		if err != nil {
+			return nil, err
+		}
+
 		posts = append(posts, post)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 	return posts, nil
+}
+
+func GetPostCategoriesByPostId(postId string) ([]string, error) {
+	categoriesByPost := []string{}
+	query := `SELECT category_name FROM CategoriesByPost WHERE post_id = ?`
+	rows, err := GlobVar.DB.Query(query, postId)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		buffer := ""
+		if err := rows.Scan(&buffer); err != nil {
+			return nil, err
+		}
+
+		categoriesByPost = append(categoriesByPost, buffer)
+	}
+	
+	return categoriesByPost, nil
 }
 
 func GetAllComments() ([]GlobVar.Comment, error) {

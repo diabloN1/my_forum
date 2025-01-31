@@ -63,7 +63,7 @@
             <p class="post-description">{{.Content}}</p>
             <div class="post-meta">
               <span>Posted by {{.UserName}}</span>
-              <span>{{.Category}}</span>
+              <span>{{.range .Categories}} {{.}} {{.end}}</span>
             </div>
             <div class="post-actions">
               <form action="/IsLike" method="post" class="action-form">

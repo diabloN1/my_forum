@@ -690,6 +690,7 @@ body {
   border-radius: 4px;
   color: var(--text);
   margin-bottom: 0.5rem;
+  overflow-x: auto  ;
 }
 
 .comment-submit {

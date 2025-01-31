@@ -23,7 +23,7 @@ type Post struct {
 	Image     string    `db:"image_url" json:"image_url"`
 	Title     string    `db:"title" json:"title"`
 	Content   string    `db:"content" json:"content"`
-	Category  string    `db:"category" json:"category"`
+	Categories  []string    `db:"category" json:"category"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"` 
 	UserName  string `json:"user_name"`  
 	UserImage string `json:"user_image"` 

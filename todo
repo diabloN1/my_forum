@@ -9,16 +9,8 @@ Handle methods allowed and general errors handling...
 diablo :
 - categories filtring.
 - look for a solution for user_ip since it changes every browser lunch.
-- DONE : add values to range filters.
-- DONE : fix creation date start / end.
-- DONE : comments likes and dislikes.
-- DONE : backend protect forms.
-- DONE : remove token from sessions in db.
-- DONE : use auth middleware on filters button.
 
 anass :
-- post can have multiple categories.
-- add \# for better search indexing.
 - styling.
 
 hamza :

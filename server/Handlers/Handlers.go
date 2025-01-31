@@ -2,6 +2,7 @@ package Handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -43,7 +44,7 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
     }
 
     // Fetch the post details
-    _ ,post, err := Cruds.GetPostByID(postID)
+    post, err := Cruds.GetPostByID(postID)
 
     if err != nil {
         Cruds.ShowError(w, "Post not found", http.StatusNotFound)
@@ -319,9 +320,10 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := Cruds.GetAllPosts()
 	if err != nil {
-		Cruds.ShowError(w, "500", http.StatusInternalServerError)
+		Cruds.ShowError(w, "500 -11", http.StatusInternalServerError)
 		return
 	}
+    fmt.Println(posts)
      
 	if len(posts) > 0 {
 		for i := range posts {
@@ -352,6 +354,7 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
     
+    fmt.Println(posts)
 	err = tmpl.Execute(w, posts)
 	if err != nil {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
@@ -450,7 +453,10 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	    // Default to existing image
 		 imagePath := data.Image
 		// Update user in the database
-		Cruds.UpdateUser(email, name, imagePath, password, userID)
+		err := Cruds.UpdateUser(email, name, imagePath, password, userID)
+        if err != nil {
+            Cruds.ShowError(w, "500", 500)
+        }
 		http.Redirect(w, r, "/Profile_Account", http.StatusSeeOther)
 		return		
     }
@@ -490,7 +496,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         }
 
         isValidInputs := title != "" && category != "" && content != "" && len(title) < 400 && len(categories) < 400 && len(content) < 4000
-        if isValidInputs && Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, category) {
+        if isValidInputs && Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, []string{category}) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return
         } else {

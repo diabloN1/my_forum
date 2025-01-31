@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS posts (
     title TEXT,
     content TEXT,
     image_url TEXT, -- URL or path to the post image
-    category TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -33,20 +32,12 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+
 -- 4. Categories 🏷️​
 CREATE TABLE IF NOT EXISTS categories (
     id TEXT UNIQUE PRIMARY KEY,
     category_name TEXT UNIQUE NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- 5. PostCategory 🔗​
-CREATE TABLE IF NOT EXISTS postCategory (
-    post_id TEXT NOT NULL,
-    category_id TEXT NOT NULL,
-    PRIMARY KEY (post_id, category_id),
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
 -- 6. LikeDislike 👍👎​
@@ -89,4 +80,11 @@ CREATE TABLE IF NOT EXISTS Messages (
     sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES Conversations(id),
     FOREIGN KEY (sender_id) REFERENCES Users(id)
+);
+
+-- 10. CategoriesByPost ​
+CREATE TABLE IF NOT EXISTS CategoriesByPost (
+    post_id TEXT NOT NULL,
+    category_name TEXT NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES posts(id)
 );
