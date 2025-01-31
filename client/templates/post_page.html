@@ -36,6 +36,7 @@
                     <input type="hidden" name="postId" value="{{.Post.ID}}" />
                     <input type="hidden" name="userId" value="{{.User.ID}}" />
                     <input type="hidden" name="isLike" value="true" />
+                    <input type="hidden" name="isComment" value="false" />
                     <button
                       type="submit"
                       class="action-btn like-btn"
@@ -49,6 +50,7 @@
                     <input type="hidden" name="postId" value="{{.Post.ID}}" />
                     <input type="hidden" name="userId" value="{{.User.ID}}" />
                     <input type="hidden" name="isLike" value="false" />
+                    <input type="hidden" name="isComment" value="false" />
                     <button
                       type="submit"
                       class="action-btn dislike-btn"
@@ -77,6 +79,35 @@
             <div class="comment">
               <div class="comment-author">{{.Content}}</div>
               <div class="comment-content">{{.UserName}}</div>
+              <form action="/IsLike" method="post" class="action-form">
+                <input type="hidden" name="postId" value="{{.PostId}}" />
+                <input type="hidden" name="commentId" value="{{.ID}}" />
+                <input type="hidden" name="userId" value="{{.UserId}}" />
+                <input type="hidden" name="isLike" value="true" />
+                <input type="hidden" name="isComment" value="true" />
+                <button
+                  type="submit"
+                  class="action-btn like-btn"
+                  data-post-id="{{.ID}}"
+                >
+                  👍 <span class="like-count">{{.CommentLikes}}</span>
+                </button>
+              </form>
+
+              <form action="/IsLike" method="post" class="action-form">
+                <input type="hidden" name="postId" value="{{.PostId}}" />
+                <input type="hidden" name="commentId" value="{{.ID}}" />
+                <input type="hidden" name="userId" value="{{.UserId}}" />
+                <input type="hidden" name="isLike" value="false" />
+                <input type="hidden" name="isComment" value="true" />
+                <button
+                  type="submit"
+                  class="action-btn dislike-btn"
+                  data-post-id="{{.ID}}"
+                >
+                  👎 <span class="dislike-count">{{.CommentDislikes}}</span>
+                </button>
+              </form>
             </div>
             {{end}}
           </div>
@@ -90,7 +121,7 @@
               name="content"
               class="comment-input"
             />
-            <button type="submit" class="comment-submit">Comment</button>
+            <button type="submit" class="comment-submit" maxlength="4000">Comment</button>
           </form>
         </div>
       </div>

@@ -1,28 +1,29 @@
 tasks :
 
 Does the project handle HTTP status 400 - Bad Requests?
-+Does the project present a script to build the images and containers? (using a script to simplify the build)
-
+Handle methods allowed and general errors handling...
 
 
 
 
 diablo :
-- comments likes and dislikes.
 - categories filtring.
-
+- look for a solution for user_ip since it changes every browser lunch.
+- DONE : add values to range filters.
+- DONE : fix creation date start / end.
+- DONE : comments likes and dislikes.
+- DONE : backend protect forms.
+- DONE : remove token from sessions in db.
+- DONE : use auth middleware on filters button.
 
 anass :
 - post can have multiple categories.
 - add \# for better search indexing.
-
 - styling.
-- backend forms.
-- remove token from sessions in db.
 
 hamza :
 - Dockerfile.
-- script to run the project (I should provide a template).
+- script to run the project. https://github.com/diabloN1/ascii-art-web-anasV/blob/master/run.bash
 
 mellaghi :
 - upload image.

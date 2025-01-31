@@ -30,7 +30,6 @@ type Post struct {
 	NbrComment int `json:"nbr_comment"`
 	NbrLike    int `json:"nbr_like"`
 	NbrDislike int `json:"nbr_dislike"`
-
 }
 
 type Comment struct {
@@ -41,6 +40,8 @@ type Comment struct {
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 	UserName string		`db:"UserName" json:"UserName"`
+	CommentLikes    int `json:"nbr_like"`
+	CommentDislikes int `json:"nbr_dislike"`
 }
 
 type Categories struct {

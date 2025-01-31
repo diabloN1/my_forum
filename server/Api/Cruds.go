@@ -50,23 +50,24 @@ func GetUserPostCount(userID string) (int, error) {
     return postCount, nil
 }
 
-func GetUserLikeCount(userID string) (int, error) {
+func GetUserLikeCount(userID string, isForComment bool) (int, error) {
     query := `
         SELECT COUNT(ld.id)
         FROM users u
         LEFT JOIN posts p ON u.id = p.user_id
-        LEFT JOIN likeDislike ld ON p.id = ld.post_id AND ld.is_like = TRUE
+        LEFT JOIN likeDislike ld ON p.id = ld.post_id AND ld.is_like = TRUE AND ls.is_comment = ?
         WHERE u.id = ?;
     `
 
     var likeCount int
-    err := GlobVar.DB.QueryRow(query, userID).Scan(&likeCount)
+    err := GlobVar.DB.QueryRow(query, isForComment, userID).Scan(&likeCount)
     if err != nil {
         return 0, err
     }
 
     return likeCount, nil
 }
+
 
 func GetUserCommentCount(userID string) (int, error) {
     query := `
@@ -187,10 +188,10 @@ func GetCategories() ([]GlobVar.Categories, error) {
 }
 
 
-func InsertLikeDislike(userId, postId string, isLike bool) {
+func InsertLikeDislike(userId, postId string, isLike bool, isForComment bool) {
 	id := GenerateUUID()
-	query := `INSERT INTO likeDislike (id, user_id, post_id, is_like) VALUES (?, ?, ?, ?)`
-	_, err := GlobVar.DB.Exec(query, id, userId, postId, isLike)
+	query := `INSERT INTO likeDislike (id, user_id, post_id, is_like, is_comment) VALUES (?, ?, ?, ?, ?)`
+	_, err := GlobVar.DB.Exec(query, id, userId, postId, isLike, isForComment)
 	if err != nil {
 		log.Printf("error exec query: %v", err)
 		return
@@ -205,9 +206,9 @@ func GetPostComments(postId string) ([]GlobVar.Comment, error) {
 			comments.id, 
 			comments.post_id, 
 			comments.user_id, 
-			comments.content, 
+			comments.content,
 			comments.created_at, 
-			comments.updated_at, 
+			comments.updated_at,
 			users.user_name AS UserName
 		FROM 
 			comments
@@ -240,6 +241,14 @@ func GetPostComments(postId string) ([]GlobVar.Comment, error) {
 			log.Printf("Error scanning comment row: %v", err)
 			continue
 		}
+		commentLikes, commentDislikes, err := GetLikesDislikesByPost(comment.ID, true)
+		comment.CommentLikes = commentLikes
+		comment.CommentDislikes = commentDislikes
+		if err != nil {
+			log.Printf("Error scanning comment row: %v", err)
+			continue
+		}
+		
 		comments = append(comments, comment)
 	}
 
@@ -250,9 +259,11 @@ func GetPostComments(postId string) ([]GlobVar.Comment, error) {
 	return comments, nil
 }
 
-func CheckUserLikeDislikeExists(userId, postId string) (bool, bool) {
-	query := `SELECT is_like FROM likeDislike WHERE user_id = ? AND post_id = ?`
-	row := GlobVar.DB.QueryRow(query, userId, postId)
+
+
+func CheckUserLikeDislikeExists(userId, postId string, isForComment bool) (bool, bool) {
+	query := `SELECT is_like FROM likeDislike WHERE user_id = ? AND post_id = ? AND is_comment = ?`
+	row := GlobVar.DB.QueryRow(query, userId, postId, isForComment)
 
 	var isLike bool
 	err := row.Scan(&isLike)
@@ -268,9 +279,9 @@ func CheckUserLikeDislikeExists(userId, postId string) (bool, bool) {
 }
 
 
-func UpdateLikeDislike(userId, postId string, isLike bool) {
-	query := `UPDATE likeDislike SET is_like = ? WHERE user_id = ? AND post_id = ?`
-	_, err := GlobVar.DB.Exec(query, isLike, userId, postId)
+func UpdateLikeDislike(userId, postId string, isLike bool, isForComment bool) {
+	query := `UPDATE likeDislike SET is_like = ? WHERE user_id = ? AND post_id = ? AND is_comment = ?`
+	_, err := GlobVar.DB.Exec(query, isLike, userId, postId, isForComment)
 	if err != nil {
 		log.Printf("Error updating like/dislike: %v", err)
 	}
@@ -279,9 +290,9 @@ func UpdateLikeDislike(userId, postId string, isLike bool) {
 
 
 // this function deletes the like and dislike from the database
-func DeleteLikeDislike(userId, postId string) {
-	query := `DELETE FROM likeDislike WHERE user_id = ? AND post_id = ?`
-	_, err := GlobVar.DB.Exec(query, userId, postId)
+func DeleteLikeDislike(userId, postId string, isForComment bool) {
+	query := `DELETE FROM likeDislike WHERE user_id = ? AND post_id = ? AND is_comment = ?`
+	_, err := GlobVar.DB.Exec(query, userId, postId, isForComment)
 	if err != nil {
 		log.Printf("error deleting like or dislike: %v", err)
 		return
@@ -289,19 +300,19 @@ func DeleteLikeDislike(userId, postId string) {
 }
 
 
-// this function checks if the like or dislike already exist
-func CheckLikeDislikeExists(userId, postId string) (bool, bool) {
-	var isLike bool
-	query := `SELECT is_like FROM likeDislike WHERE user_id = ? AND post_id = ?`
-	err := GlobVar.DB.QueryRow(query, userId, postId).Scan(&isLike)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, false
-		}
-		return false, false
-	}
-	return true, isLike
-}
+// // this function checks if the like or dislike already exist
+// func CheckLikeDislikeExists(userId, postId string, isForComment bool) (bool, bool) {
+// 	var isLike bool
+// 	query := `SELECT is_like FROM likeDislike WHERE user_id = ? AND post_id = ? AND is_comment = ?`
+// 	err := GlobVar.DB.QueryRow(query, userId, postId, isForComment).Scan(&isLike)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return false, false
+// 		}
+// 		return false, false
+// 	}
+// 	return true, isLike
+// }
 
 func GetPostByID(postID string) (string, *GlobVar.Post, error) {
     query := `SELECT id, user_id, image_url, title, content, category, created_at FROM posts WHERE id = ?`
@@ -355,7 +366,7 @@ func GetUser(value string) *GlobVar.User {
 	}
 	user.UserPostCount, _ = GetUserPostCount(user.ID)
     user.UserCommentCount, _ = GetUserCommentCount(user.ID)
-    user.UserLikeCount, _ = GetUserLikeCount(user.ID)
+    user.UserLikeCount, _ = GetUserLikeCount(user.ID, false)
     return &user
 }
 
@@ -434,7 +445,7 @@ func GetAllComments() ([]GlobVar.Comment, error) {
 }
 
 func GetAllLikeDislike() ([]GlobVar.LikeDislike, error) {
-	query := `SELECT id, user_id, post_id, is_like FROM likeDislike`
+	query := `SELECT id, user_id, post_id, is_like FROM likeDislike WHERE is_comment = FALSE`
 	rows, err := GlobVar.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -455,18 +466,18 @@ func GetAllLikeDislike() ([]GlobVar.LikeDislike, error) {
 	return likeDislike, nil
 }
 
-func GetLikesDislikesByPost(id string) (int, int, error) {
+func GetLikesDislikesByPost(id string, isForComment bool) (int, int, error) {
 
 	var likes, dislikes int
-	queryLikes := `SELECT count(*) FROM likeDislike WHERE post_id = ? and is_like = 1`
-	queryDislikes := `SELECT count(*) FROM likeDislike WHERE post_id = ? and is_like = 0`
+	queryLikes := `SELECT count(*) FROM likeDislike WHERE post_id = ? and is_like = 1 and is_comment = ?`
+	queryDislikes := `SELECT count(*) FROM likeDislike WHERE post_id = ? and is_like = 0 and is_comment = ?`
 
-	err := GlobVar.DB.QueryRow(queryLikes, id).Scan(&likes)
+	err := GlobVar.DB.QueryRow(queryLikes, id, isForComment).Scan(&likes)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	err = GlobVar.DB.QueryRow(queryDislikes, id).Scan(&dislikes)
+	err = GlobVar.DB.QueryRow(queryDislikes, id, isForComment).Scan(&dislikes)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -538,169 +549,8 @@ func ShowError(w http.ResponseWriter, message string, status int) {
     // Execute the template with the error message
     err = tmpl.Execute(w, httpError)
     if err != nil {
-        // If template execution fails, respond with a generic error
-        ShowError(w, "Could not render error page", http.StatusInternalServerError)
+        // If template execution fails, send a fallback error response with plain text
+        w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte("Internal Server Error: Could not render error page"))
     }
 }
-
-
-
-
-
-
-// package cruds
-
-// import (
-// 	"database/sql"
-// 	"fmt"
-// 	"log"
-
-// 	"forum/GlobVar"
-
-// 	"github.com/gofrs/uuid"
-// 	"golang.org/x/crypto/bcrypt"
-// )
-
-// // Utility Functions
-
-// // GenerateUUID generates a new UUID.
-// func GenerateUUID() string {
-// 	id, _ := uuid.NewV4()
-// 	return id.String()
-// }
-
-// // HashPassword hashes a password using bcrypt.
-// func HashPassword(password string) (string, error) {
-// 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		return "", fmt.Errorf("error hashing password: %w", err)
-// 	}
-// 	return string(bytes), nil
-// }
-
-// // ExecQuery executes a query and logs errors.
-// func ExecQuery(query string, args ...interface{}) error {
-// 	_, err := GlobVar.DB.Exec(query, args...)
-// 	if err != nil {
-// 		log.Printf("Error executing query (%s): %v", query, err)
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// // QueryRow scans a single row and logs errors.
-// func QueryRow(query string, dest ...interface{}) error {
-// 	err := GlobVar.DB.QueryRow(query).Scan(dest...)
-// 	if err != nil && err != sql.ErrNoRows {
-// 		log.Printf("Error querying row (%s): %v", query, err)
-// 	}
-// 	return err
-// }
-
-// // CRUD Operations
-
-// // InsertUser inserts a new user into the database.
-// func InsertUser(name, image, email, password string) (string, error) {
-// 	id := GenerateUUID()
-// 	hashedPassword, err := HashPassword(password)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	query := `INSERT INTO users (id, email, user_name, password_hash, user_image) VALUES (?, ?, ?, ?, ?)`
-// 	return id, ExecQuery(query, id, email, name, hashedPassword, image)
-// }
-
-// // InsertPost inserts a new post into the database.
-// func InsertPost(userID, image, title, content, category string) error {
-// 	id := GenerateUUID()
-// 	query := `INSERT INTO posts (id, user_id, title, content, image_url, category) VALUES (?, ?, ?, ?, ?, ?)`
-// 	return ExecQuery(query, id, userID, title, content, image, category)
-// }
-
-// // InsertComment inserts a new comment into the database.
-// func InsertComment(postID, userID, content string) error {
-// 	id := GenerateUUID()
-// 	query := `INSERT INTO comments (id, post_id, user_id, content) VALUES (?, ?, ?, ?)`
-// 	return ExecQuery(query, id, postID, userID, content)
-// }
-
-// // InsertCategory inserts a new category into the database.
-// func InsertCategory(userID, categoryName string) error {
-// 	id := GenerateUUID()
-// 	query := `INSERT INTO categories (id, category_name, created_by_user_id) VALUES (?, ?, ?)`
-// 	return ExecQuery(query, id, categoryName, userID)
-// }
-
-// // InsertLikeDislike inserts a like or dislike into the database.
-// func InsertLikeDislike(userID, postID string, isLike bool) error {
-// 	id := GenerateUUID()
-// 	query := `INSERT INTO likeDislike (id, user_id, post_id, is_like) VALUES (?, ?, ?, ?)`
-// 	return ExecQuery(query, id, userID, postID, isLike)
-// }
-
-// // DeleteLikeDislike deletes a like or dislike from the database.
-// func DeleteLikeDislike(userID, postID string) error {
-// 	query := `DELETE FROM likeDislike WHERE user_id = ? AND post_id = ?`
-// 	return ExecQuery(query, userID, postID)
-// }
-
-// // CheckLikeDislikeExists checks if a like or dislike exists.
-// func CheckLikeDislikeExists(userID, postID string) (bool, bool, error) {
-// 	var isLike bool
-// 	query := `SELECT is_like FROM likeDislike WHERE user_id = ? AND post_id = ?`
-// 	err := GlobVar.DB.QueryRow(query, userID, postID).Scan(&isLike)
-// 	if err == sql.ErrNoRows {
-// 		return false, false, nil
-// 	} else if err != nil {
-// 		return false, false, err
-// 	}
-// 	return true, isLike, nil
-// }
-
-// // GetPostByID retrieves a post by its ID.
-// func GetPostByID(postID string) (*GlobVar.Post, error) {
-// 	query := `SELECT id, user_id, image_url, title, content, category, created_at FROM posts WHERE id = ?`
-// 	var post GlobVar.Post
-// 	err := QueryRow(query, &post.ID, &post.UserId, &post.Image, &post.Title, &post.Content, &post.Category, &post.CreatedAt)
-// 	if err == sql.ErrNoRows {
-// 		return nil, fmt.Errorf("post not found")
-// 	}
-// 	return &post, err
-// }
-
-// // UpdateUser updates a user's information.
-// func UpdateUser(email, name, image, password, userID string) error {
-// 	query := `UPDATE users SET user_name = ?, user_image = ?, email = ?, password_hash = ? WHERE id = ?`
-// 	hashedPassword, err := HashPassword(password)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return ExecQuery(query, name, image, email, hashedPassword, userID)
-// }
-
-// // Bulk Data Retrieval
-
-// // GetAllUsers retrieves all users.
-// func GetAllUsers() ([]GlobVar.User, error) {
-// 	query := `SELECT id, email, user_name, password_hash, user_image, created_at FROM users`
-// 	return fetchUsers(query)
-// }
-
-// // fetchUsers scans multiple users from a query result.
-// func fetchUsers(query string) ([]GlobVar.User, error) {
-// 	rows, err := GlobVar.DB.Query(query)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	var users []GlobVar.User
-// 	for rows.Next() {
-// 		var user GlobVar.User
-// 		if err := rows.Scan(&user.ID, &user.Email, &user.Name, &user.PasswordHash, &user.Image, &user.CreatedAt); err != nil {
-// 			return nil, err
-// 		}
-// 		users = append(users, user)
-// 	}
-// 	return users, rows.Err()
-// }

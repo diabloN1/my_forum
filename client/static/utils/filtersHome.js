@@ -4,16 +4,25 @@ const categoryFilterButtons = document.getElementById("categoryFilterButtons");
 const filterButton = document.getElementById("filterButton");
 const postsDivs = document.getElementsByClassName('post-card')
 
+// Check authentication status and update navbar
+checkAuthStatus().then((isAuthenticated) => {
+  if (!isAuthenticated) {
+    filterButton.remove()
+  }
+});
+
 // Read and parse json (takes a string and returns the parsed object)
 const postsData = JSON.parse(document.getElementById("postsData").textContent);
+console.log(postsData)
 if (postsData) {
 
   var maxLikesRatio = 0;
   var searchValue = "";
   
-  var creatingDateFilterValue = { min: 1738093331629, max: Date.now() };
+  var creatingDateFilterValue = { min: Date.now(), max: 0 };
   var likesFilterValue = { min: 0, max: 0 };
   fillLikesFilterValue(); 
+  fillCreationDateFilterValue();
   
   
   filterButton?.addEventListener("click", () => {
@@ -47,8 +56,6 @@ if (postsData) {
     } else if (parent == "user_name" || parent == "title") {
       //&& (parent != "image")
       searchExemples.add(value + " - " + parent);
-    } else if (parent == "created_at") {
-      //---------------------------------------------------------------------------------
     } else if (value instanceof Array) {
       // We didn't use typeof because it define the array as an object
       // If it's an array, push all its items onto the stack with the current parent name
@@ -83,10 +90,11 @@ if (postsData) {
     }
   });
   
-  const categoryFilterButtonsChildren = document.getElementsByClassName('categoryButtonsClass');
-  
+  let categoryFilterButtonsChildren = document.getElementsByClassName('categoryButtonsClass');
+  categoryFilterButtonsChildren = [...categoryFilterButtonsChildren]
   var selectedCategories = {}
   
+  console.log(categoryFilterButtonsChildren)
   if (categoryFilterButtonsChildren.length > 1) {
     categoryFilterButtonsChildren.forEach((button) => {
       button.addEventListener("click", () => {
@@ -107,11 +115,11 @@ if (postsData) {
   // Creation Date
   const creationDateFilter = document.getElementById("creationDateFilter");
   noUiSlider.create(creationDateFilter, {
-    start: [1738093331629, Date.now()],
+    start: [creatingDateFilterValue.min, creatingDateFilterValue.max],
     connect: true,
     range: {
-      min: 1738093331629,
-      max: Date.now(),
+      min: creatingDateFilterValue.min,
+      max: creatingDateFilterValue.max,
     },
     step: 1,
   });
@@ -122,6 +130,9 @@ if (postsData) {
     creatingDateFilterValue.min = Math.round(values[0]);
     creatingDateFilterValue.max = Math.round(values[1]);
   
+    document.getElementById('creationMin').innerText = new Date(Math.round(values[0])).toLocaleString();
+    document.getElementById('creationMax').innerText = new Date(Math.round(values[1])).toLocaleString();
+
     showResults();
   });
   
@@ -142,7 +153,8 @@ if (postsData) {
     // Save values
     likesFilterValue.min = values[0];
     likesFilterValue.max = values[1];
-  
+    document.getElementById('rateMin').innerText = Math.round(values[0])
+    document.getElementById('rateMax').innerText = Math.round(values[1])
     showResults();
   });
   
@@ -172,7 +184,20 @@ if (postsData) {
       }
     });
   }
+
   
+  // Get min and max creation date
+  function fillCreationDateFilterValue() {
+    postsData?.forEach((post)=>{
+      if (Date.parse(post.created_at) < creatingDateFilterValue.min) {
+        creatingDateFilterValue.min = Date.parse(post.created_at)
+      } 
+      if (Date.parse(post.created_at) > creatingDateFilterValue.max) {
+        creatingDateFilterValue.max = Date.parse(post.created_at)
+      }
+    })
+  }  
+
   // Get min and max rated posts
   function fillLikesFilterValue() {
     postsData?.forEach((post)=>{
@@ -183,5 +208,5 @@ if (postsData) {
         likesFilterValue.min = post.nbr_like - post.nbr_dislike
       }
     })
-  }  
+  }    
 }

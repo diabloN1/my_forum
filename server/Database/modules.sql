@@ -52,12 +52,12 @@ CREATE TABLE IF NOT EXISTS postCategory (
 -- 6. LikeDislike 👍👎​
 CREATE TABLE IF NOT EXISTS likeDislike (
     id TEXT UNIQUE PRIMARY KEY, 
-    user_id TEXT NOT NULL, 
-    post_id TEXT NOT NULL, 
+    user_id TEXT NOT NULL,
+    post_id TEXT NOT NULL,
     is_like BOOLEAN NOT NULL, 
+    is_comment BOOLEAN NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE, 
-    UNIQUE(user_id, post_id) 
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
 
@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS likeDislike (
 CREATE TABLE IF NOT EXISTS Session (
     id TEXT UNIQUE PRIMARY KEY,
     user_id TEXT NOT NULL,
-    token TEXT UNIQUE NOT NULL,
     user_ip TEXT UNIQUE NOT NULL,
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(id)

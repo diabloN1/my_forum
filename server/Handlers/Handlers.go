@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -64,7 +65,7 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
     }
 
     // Fetch likes and dislikes for the post
-    likes, dislikes, err := Cruds.GetLikesDislikesByPost(postID)
+    likes, dislikes, err := Cruds.GetLikesDislikesByPost(postID, false)
     if err != nil {
         Cruds.ShowError(w, "Failed to fetch likes/dislikes", http.StatusInternalServerError)
     }
@@ -110,7 +111,7 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
     comment := r.FormValue("content")
     postId := r.FormValue("postId")
     userId := r.Context().Value("userID").(string)
-    if strings.TrimSpace(comment) == "" {
+    if strings.TrimSpace(comment) == "" || len(comment) > 2000 {
         http.Redirect(w, r, "/post/?id="+postId, http.StatusSeeOther)
         return 
     }
@@ -128,30 +129,37 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		// Extracting values from the form
 		postId := r.FormValue("postId")
+		commentId := r.FormValue("commentId")
 		userId, _ := r.Context().Value("userID").(string)
 		isLike := r.FormValue("isLike") == "true"
+        isForComment := r.FormValue("isComment") == "true"
+        postToRedirect := postId
+
+
+        if isForComment {
+            postId = commentId
+        }
 
 		// Validate inputs
-		if postId == "" || userId == "" {
+		if (postId == "") || userId == "" {
 			Cruds.ShowError(w, "Invalid input", http.StatusBadRequest)
 			return
 		}
 
-
 		// Check if the user already liked/disliked this post
-		exists, currentIsLike := Cruds.CheckUserLikeDislikeExists(userId, postId)
+		exists, currentIsLike := Cruds.CheckUserLikeDislikeExists(userId, postId, isForComment)
 
 		if exists {
 			if isLike == currentIsLike {
 				// If the current action matches the existing action, remove the like/dislike
-				Cruds.DeleteLikeDislike(userId, postId)
+				Cruds.DeleteLikeDislike(userId, postId, isForComment)
 			} else {
 				// If the current action is different, update the like/dislike
-				Cruds.UpdateLikeDislike(userId, postId, isLike)
+				Cruds.UpdateLikeDislike(userId, postId, isLike, isForComment)
 			}
 		} else {
 			// If no record exists, insert a new like/dislike
-			Cruds.InsertLikeDislike(userId, postId, isLike)
+			Cruds.InsertLikeDislike(userId, postId, isLike, isForComment)
 		}
 
 		// Redirect the user back to the previous page
@@ -159,7 +167,7 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 		if referer == "http://localhost:8080/" {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		} else {
-			http.Redirect(w, r, "/post/?id="+postId, http.StatusSeeOther)
+			http.Redirect(w, r, "/post/?id=" + postToRedirect, http.StatusSeeOther)
 		}
 		return
 	}
@@ -197,8 +205,9 @@ func HandleSignIn(w http.ResponseWriter, r *http.Request) {
 
         email := r.FormValue("email")
         password := r.FormValue("password")
+        
 
-        if email == "" || password == "" {
+        if email == "" || len(password) < 8 || len(email) > 400 || len(password) > 400 {
             Cruds.ShowError(w, "500", http.StatusInternalServerError)
         } 
 
@@ -247,12 +256,18 @@ func HandleSignUp(w http.ResponseWriter, r *http.Request) {
         name := r.FormValue("name")
         email := r.FormValue("email")
         password := r.FormValue("password")
+        passwordConfirmation := r.FormValue("passwordConfirmation")
+
         image := GlobVar.DefaultImage
         
         // Check email and name availability
         u1 := Cruds.GetUser(email)
         u2 := Cruds.GetUser(name)
-        if u1 != nil || u2 != nil {
+
+        emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && email != "" && len(password) < 400
+        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && name != "" && len(name) < 400
+        if !isValidName || !isValidEmail || len(password) < 8 || password != passwordConfirmation || len(password) > 400 || len(passwordConfirmation) > 400 {
             http.Redirect(w, r, "/Sign_Up", http.StatusSeeOther)       
             return
         }
@@ -323,7 +338,7 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
             }
 
 			//likedislike
-            posts[i].NbrLike, posts[i].NbrDislike, err = Cruds.GetLikesDislikesByPost(posts[i].ID)
+            posts[i].NbrLike, posts[i].NbrDislike, err = Cruds.GetLikesDislikesByPost(posts[i].ID, false)
             if err != nil {
                 Cruds.ShowError(w, "500", http.StatusBadRequest)
                 return
@@ -402,16 +417,33 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         name := r.FormValue("name")
         email := r.FormValue("email")
         password := r.FormValue("password")
+        passwordConfirmation := r.FormValue("passwordConfirmation")
+
+        // Check email and name availability
+        u1 := Cruds.GetUser(email)
+        u2 := Cruds.GetUser(name)
+
         if len(name) == 0 {
             name = data.Name
+            u2 = nil
         }
         if len(email) == 0 {
             email = data.Email
+            u1 = nil
         }
-		if len(password) == 0 {
+		if len(password) == 0 || len(name) > 400 {
 			password = ""
 		}
-
+        
+        emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && len(password) < 400
+        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 400
+        isValidPassword := password == "" || password == passwordConfirmation
+        if (!isValidEmail || !isValidName || !isValidPassword) {
+            http.Redirect(w, r, "/Update_Profile", http.StatusSeeOther)       
+            return
+        }
+        
         // Handle file upload
 		// To be Impelented !!!!!!!!!!!!!
 
@@ -457,7 +489,8 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             category = categories
         }
 
-        if category != "" && Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, category) {
+        isValidInputs := title != "" && category != "" && content != "" && len(title) < 400 && len(categories) < 400 && len(content) < 4000
+        if isValidInputs && Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, category) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return
         } else {
@@ -495,14 +528,14 @@ func Set_Cookies_Handler(w http.ResponseWriter, r *http.Request, userID string) 
 
 	// Insert the session into the database
 	expiresAt := time.Now().Add(7 * 24 * time.Hour) // Session expires in 7 days
-	query := `INSERT INTO Session (id, user_id, token, user_ip, expires_at) VALUES (?, ?, ?, ?, ?)`
-	_, err = GlobVar.DB.Exec(query, sessionID, userID, sessionID, r.RemoteAddr, expiresAt)
+	query := `INSERT INTO Session (id, user_id, user_ip, expires_at) VALUES (?, ?, ?, ?)`
+	_, err = GlobVar.DB.Exec(query, sessionID, userID, r.RemoteAddr, expiresAt)
 	if err != nil {
 		Cruds.ShowError(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Printf("Error storing session in database: %v", err)
 		return
 	}
-    
+
 	// Set the session cookie
 	cookie := &http.Cookie{
 		Name:     "Session_ID",

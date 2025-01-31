@@ -30,6 +30,7 @@ func main() {
 	// Public routes
 	http.Handle("/static/", http.StripPrefix("/static", http.HandlerFunc(Handlers.HandleStatic))) // needs error page
 	http.HandleFunc("/", Handlers.HandleIndex)
+	http.HandleFunc("/post/", Handlers.HandlePostPage)
 	http.HandleFunc("/Sign_In", Handlers.HandleSignIn)
 	http.HandleFunc("/Sign_Up", Handlers.HandleSignUp)
 	http.HandleFunc("/api/auth/status", Handlers.HandleAuthStatus)
@@ -37,7 +38,6 @@ func main() {
 	// Protected routes
 	http.HandleFunc("/Comment", middleware.ValidateSession(Handlers.HandleComment))
 	http.HandleFunc("/IsLike", middleware.ValidateSession(Handlers.HandleLikeDislike))
-	http.HandleFunc("/post/", middleware.ValidateSession(Handlers.HandlePostPage))
 	http.HandleFunc("/Log_Out", middleware.ValidateSession(Handlers.HandleLogOut))
 	http.HandleFunc("/Profile_Account", middleware.ValidateSession(Handlers.HandleProfileAccount))
 	http.HandleFunc("/Update_Profile", middleware.ValidateSession(Handlers.HandleProfileUpdate))
