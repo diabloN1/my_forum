@@ -3,23 +3,27 @@ tasks :
 Does the project handle HTTP status 400 - Bad Requests?
 Handle methods allowed and general errors handling...
 
-
+- error to when invalid input category backend.
+- remove trailing spacing while inputing.
 
 
 diablo :
-- categories filtring.
-- look for a solution for user_ip since it changes every browser lunch.
+---------------- middleware username + auth + test singlepage idea fetching request the aplying it with js without reload
 
 anass :
 - styling.
+- protect backend Categories input.
 
 hamza :
 - Dockerfile.
-- script to run the project. https://github.com/diabloN1/ascii-art-web-anasV/blob/master/run.bash
+- script to run the project. https://github.com/diabloN1/ascii-art-web-anasV/blob/master/run.bash.
+- backend testing.
 
 mellaghi :
-- upload image.
+- html placeHolders.
 
 yassin :
 - backend testing.
 - auth bonus (after validating forum).
+
+

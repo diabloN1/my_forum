@@ -33,6 +33,18 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+func CheckUserInfo(email, password string) bool {
+	user := GetUser(email)
+	if user != nil {
+		if !CheckPasswordHash(password, user.PasswordHash) {
+			return false
+		}	
+	} else {
+		return false
+	}
+	return true
+}
+
 func GetUserPostCount(userID string) (int, error) {
     query := `
         SELECT COUNT(p.id)
@@ -55,7 +67,7 @@ func GetUserLikeCount(userID string, isForComment bool) (int, error) {
         SELECT COUNT(ld.id)
         FROM users u
         LEFT JOIN posts p ON u.id = p.user_id
-        LEFT JOIN likeDislike ld ON p.id = ld.post_id AND ld.is_like = TRUE AND ls.is_comment = ?
+        LEFT JOIN likeDislike ld ON p.id = ld.post_id AND ld.is_like = TRUE AND ld.is_comment = ?
         WHERE u.id = ?;
     `
 
@@ -137,14 +149,14 @@ func InsertPostCategories(categories []string, postId string) error {
             // Insert post
             id := GenerateUUID()
             query := `INSERT INTO categories (id, category_name) VALUES (?, ?)`
-            _, err := GlobVar.DB.Exec(query, id, "#"+category)
+            _, err := GlobVar.DB.Exec(query, id, category)
             if err != nil {
                 log.Printf("error exec query: %v", err)    
                 return err
             }
         }
         query = `INSERT INTO CategoriesByPost (post_id, category_name) VALUES (?, ?)`
-        _, err = GlobVar.DB.Exec(query, postId, "#"+category)
+        _, err = GlobVar.DB.Exec(query, postId, category)
         if err != nil {
             log.Printf("error exec query: %v", err)
             return err
@@ -549,11 +561,11 @@ func GetCommentsCountByPost(id string) (int, error) {
 	return commentsCount, nil
 }
 
-func ValidateSessionIDAndGetUserID(sessionID, addr string) (string, bool) {
+func ValidateSessionIDAndGetUserID(sessionID string) (string, bool) {
     var expiresAt time.Time
     var userID string
-    query := `SELECT user_id, expires_at FROM Session WHERE id = ? and user_ip = ?`
-    err := GlobVar.DB.QueryRow(query, sessionID, addr).Scan(&userID, &expiresAt)
+    query := `SELECT user_id, expires_at FROM Session WHERE id = ?`
+    err := GlobVar.DB.QueryRow(query, sessionID).Scan(&userID, &expiresAt)
     if err != nil {
         if err == sql.ErrNoRows {
             return "", false

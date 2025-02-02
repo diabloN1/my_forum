@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -208,7 +210,7 @@ func HandleSignIn(w http.ResponseWriter, r *http.Request) {
         password := r.FormValue("password")
         
 
-        if email == "" || len(password) < 8 || len(email) > 400 || len(password) > 400 {
+        if email == "" || len(password) < 8 || len(email) > 50 || len(password) > 20 {
             Cruds.ShowError(w, "500", http.StatusInternalServerError)
         } 
 
@@ -266,9 +268,10 @@ func HandleSignUp(w http.ResponseWriter, r *http.Request) {
         u2 := Cruds.GetUser(name)
 
         emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && email != "" && len(password) < 400
-        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && name != "" && len(name) < 400
-        if !isValidName || !isValidEmail || len(password) < 8 || password != passwordConfirmation || len(password) > 400 || len(passwordConfirmation) > 400 {
+        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && email != "" && len(password) < 20
+        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && name != "" && len(name) < 20
+        isValidPassword := len(password) < 8 || password != passwordConfirmation || len(password) > 20 || len(passwordConfirmation) > 20
+        if !isValidName || !isValidEmail || isValidPassword {
             http.Redirect(w, r, "/Sign_Up", http.StatusSeeOther)       
             return
         }
@@ -382,6 +385,7 @@ func HandleProfileAccount(w http.ResponseWriter, r *http.Request) {
 
     // Query the user using the user ID from the context
     data := Cruds.GetUser(userID)
+    
 
     if data == nil {
         Cruds.ShowError(w, "User not found", http.StatusNotFound)
@@ -421,7 +425,40 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         email := r.FormValue("email")
         password := r.FormValue("password")
         passwordConfirmation := r.FormValue("passwordConfirmation")
+    	imagePath := data.Image // Default to existing image
 
+        err := r.ParseMultipartForm(20 * 1024 * 1024) // 20mb
+        // To be Impelented !!!!!!!!!!!!!
+        if err != nil {
+            Cruds.ShowError(w, "size image abouve than 20MB",http.StatusBadRequest)
+            return
+        }
+        // Handle file upload
+        file, fileHeader, _ := r.FormFile("image")
+
+        if file != nil {
+            defer file.Close()
+            copyFile, err := os.Create("../Uploads/" + fileHeader.Filename)
+            if err != nil {
+                Cruds.ShowError(w, "err open file", http.StatusInternalServerError)
+                return
+            }
+            defer copyFile.Close()
+            hold := make([]byte, fileHeader.Size)
+            
+            _, err = file.Read(hold)
+            if err != nil {
+                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                return
+            }
+
+            _,err = copyFile.Write(hold)
+            if err != nil {
+                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                return
+            }
+            imagePath = "/Uploads/" + fileHeader.Filename
+        }
         // Check email and name availability
         u1 := Cruds.GetUser(email)
         u2 := Cruds.GetUser(name)
@@ -434,26 +471,21 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
             email = data.Email
             u1 = nil
         }
-		if len(password) == 0 || len(name) > 400 {
+		if len(password) == 0 || len(name) > 20 {
 			password = ""
 		}
         
         emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && len(password) < 400
-        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 400
+        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && len(password) < 20
+        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 20
         isValidPassword := password == "" || password == passwordConfirmation
         if (!isValidEmail || !isValidName || !isValidPassword) {
             http.Redirect(w, r, "/Update_Profile", http.StatusSeeOther)       
             return
         }
         
-        // Handle file upload
-		// To be Impelented !!!!!!!!!!!!!
-
-	    // Default to existing image
-		 imagePath := data.Image
 		// Update user in the database
-		err := Cruds.UpdateUser(email, name, imagePath, password, userID)
+		err = Cruds.UpdateUser(email, name, imagePath, password, userID)
         if err != nil {
             Cruds.ShowError(w, "500", 500)
         }
@@ -466,6 +498,8 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
         return
     }
+
+    data.Name = data.Name[1:]
     err = tmpl.Execute(w, data)
     if err != nil {
         Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
@@ -487,16 +521,45 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
     if r.Method == http.MethodPost {
         data := Cruds.GetUser(userID)
         title := r.FormValue("title")
-        categories := r.FormValue("categories")
-        category := r.FormValue("category")
+        categories := strings.Split(r.FormValue("categories"), " ")
         content := r.FormValue("content")
 
-        if categories != "other" {
-            category = categories
+        // [start] upload image
+        image := GlobVar.DefaultImage
+        err := r.ParseMultipartForm(20 * 1024 * 1024) // 20 MB
+        if err != nil {
+            Cruds.ShowError(w, "size image abouve than 20MB",http.StatusBadRequest)
+            return
         }
+        
+        file, fileHeader, err := r.FormFile("post_image")
+        if err != nil && err != http.ErrMissingFile {
+            http.Error(w, "err formFile",http.StatusBadRequest)
+            return
+        }
+        if file != nil {
+            defer file.Close()
+            copyFile, err := os.Create("../Uploads/" + fileHeader.Filename)
+            if err != nil {
+                http.Error(w, "err open file", http.StatusInternalServerError)
+                return
+            }
+            defer copyFile.Close()
+            hold := make([]byte, fileHeader.Size)
+            file.Read(hold)
+            _,err = copyFile.Write(hold)
+            if err != nil {
+                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                return
+            }
+            image = "/Uploads/"+fileHeader.Filename
+        }
+        
 
-        isValidInputs := title != "" && category != "" && content != "" && len(title) < 400 && len(categories) < 400 && len(content) < 4000
-        if isValidInputs && Cruds.InsertPost(data.ID, GlobVar.DefaultImage, title, content, []string{category}) {
+        fmt.Println("caaaaaaaaats", categories)
+        isValidInputs := title != "" && len(categories) != 0 && content != "" && len(title) < 50 && len(categories) < 10 && len(content) < 1200
+        fmt.Println(isValidInputs)
+        if isValidInputs && Cruds.InsertPost(data.ID, image, title, content, categories) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return
         } else {
@@ -534,8 +597,8 @@ func Set_Cookies_Handler(w http.ResponseWriter, r *http.Request, userID string) 
 
 	// Insert the session into the database
 	expiresAt := time.Now().Add(7 * 24 * time.Hour) // Session expires in 7 days
-	query := `INSERT INTO Session (id, user_id, user_ip, expires_at) VALUES (?, ?, ?, ?)`
-	_, err = GlobVar.DB.Exec(query, sessionID, userID, r.RemoteAddr, expiresAt)
+	query := `INSERT INTO Session (id, user_id, expires_at) VALUES (?, ?, ?)`
+	_, err = GlobVar.DB.Exec(query, sessionID, userID, expiresAt)
 	if err != nil {
 		Cruds.ShowError(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Printf("Error storing session in database: %v", err)
@@ -590,11 +653,64 @@ func HandleAuthStatus(w http.ResponseWriter, r *http.Request) {
     isAuthenticated := false
     cookie, err := r.Cookie("Session_ID")
     if err == nil {
-        _, isAuthenticated = Cruds.ValidateSessionIDAndGetUserID(cookie.Value, r.RemoteAddr)
+        _, isAuthenticated = Cruds.ValidateSessionIDAndGetUserID(cookie.Value)
     }
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]bool{
         "isAuthenticated": isAuthenticated,
     })
+}
+
+func HandleIdentifierDisponibility(w http.ResponseWriter, r *http.Request) {
+    
+    identifier := r.FormValue("identifier")
+
+    fmt.Println(identifier)
+    user := Cruds.GetUser(identifier)
+    isDisponible := user == nil
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]bool{
+        "isDisponible": isDisponible,
+    })
+}
+
+func HandleIsValidCredentials(w http.ResponseWriter, r *http.Request) {
+    buffer := make([]byte, r.ContentLength)
+    nb, err := r.Body.Read(buffer)
+    fmt.Println(nb, err, string(buffer))
+    if nb == 0 || err != io.EOF {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]bool{
+            "isValid": false,
+        })
+        return
+    }
+
+    var data = make(map[string]string)
+    err = json.Unmarshal(buffer, &data)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]bool{
+            "isValid": false,
+        })
+        return
+    }
+    fmt.Println("data :", data)
+    isValid := Cruds.CheckUserInfo(data["email"],data["password"])
+
+    fmt.Println(isValid)
+    
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]bool{
+        "isValid": isValid,
+    })
+
+    // user := Cruds.GetUser(email)
+    // isValid := user == nil
+    // w.Header().Set("Content-Type", "application/json")
+    // json.NewEncoder(w).Encode(map[string]bool{
+    //     "isValid": isValid,
+    // })
 }

@@ -56,7 +56,6 @@ CREATE TABLE IF NOT EXISTS likeDislike (
 CREATE TABLE IF NOT EXISTS Session (
     id TEXT UNIQUE PRIMARY KEY,
     user_id TEXT NOT NULL,
-    user_ip TEXT UNIQUE NOT NULL,
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );

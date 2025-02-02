@@ -17,7 +17,7 @@
     <div class="container">
       <div class="form-container" style="max-width: 600px">
         <h1 style="margin-bottom: 2rem">Edit Profile</h1>
-        <form method="post" id="edit-profile-form">
+        <form method="post" id="edit-profile-form" enctype="multipart/form-data">
           <div class="form-group">
             <label for="avatar">Profile Picture</label>
             <div style="display: flex; align-items: center; gap: 1rem">
@@ -32,37 +32,42 @@
                   object-fit: cover;
                 "
               />
-              <input type="file" id="avatar" accept="image/*" name="image" />
+              <input type="file" id="avatar" accept="image/*" name="image" maxlength="20971520"/>
             </div>
           </div>
           <div class="form-group">
             <label for="username">Username</label>
             <input
               type="text"
-              placeholder="{{.Name}}"
+              value="{{.Name}}"
               id="username"
               name="name"
               required
+              maxlength="20"
             />
+            <div id="usernameError"></div>
           </div>
           <div class="form-group">
             <label for="email">Email</label>
             <input
               type="email"
-              placeholder="{{.Email}}"
+              value="{{.Email}}"
               id="email"
               name="email"
+              maxlength="50"
             />
+            <div id="emailError"></div>
           </div>
           <div class="form-group">
             <label for="new-password">New Password (optional)</label>
-            <input type="password" id="new-password" name="password" />
+            <input type="password" id="password" name="password" maxlength="20"/>
           </div>
           <div class="form-group">
             <label for="confirm-new-password">Confirm New Password</label>
-            <input type="password" id="confirm-new-password" name="passwordConfirmation"/>
+            <input type="password" id="confirm-password" name="passwordConfirmation" maxlength="20"/>
+            <div id="passwordError"></div>
           </div>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="submit" class="btn btn-primary" id="submitButtom">Save Changes</button>
         </form>
       </div>
     </div>
@@ -84,9 +89,9 @@
               return;
             }
 
-            if (file.size > 2 * 1024 * 1024) {
+            if (file.size > 20 * 1024 * 1024) {
               // 2MB limit
-              alert("File size exceeds 2MB. Please choose a smaller file.");
+              alert("File size exceeds 20MB. Please choose a smaller file.");
               avatarInput.value = ""; // Reset the input
               return;
             }
@@ -97,9 +102,102 @@
               previewAvatar.src = e.target.result;
             };
             reader.readAsDataURL(file);
-          }
+          }co
         });
       });
+    </script>
+
+    <script type="module">
+      async function checkIdentifierDisponibility(checkIdentifierDisponibility) {
+        console.log("checkIdentifierDisponibility", checkIdentifierDisponibility)
+        try {
+          const response = await fetch("/api/checkEmail?identifier="+checkIdentifierDisponibility);
+          if (!response.ok) {
+            throw new Error("Failed to fetch email disponibility...");
+          }
+          const data = await response.json();
+          return data.isDisponible;
+        } catch (error) {
+          console.error("Error checking email disponibility:", error);
+          return false;
+        }
+      }
+      const username = document.getElementById('username')  
+
+      const email = document.getElementById('email')
+      const password = document.getElementById('password')
+      const passwordConfirmation = document.getElementById('confirm-password')
+      const submitButtom = document.getElementById('submitButtom')
+
+      const usernameError = document.getElementById('usernameError')
+      const emailError = document.getElementById('emailError')
+      const passwordError = document.getElementById('passwordError')
+
+
+      const usernameRegex = /^[a-z0-9_]{1,20}$/;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+
+      username.addEventListener('input', (event) => {
+        checkIdentifierDisponibility("@" + event.target.value).then(isDispo => {
+          if (usernameRegex.test(event.target.value) && isDispo) { 
+            usernameError.innerText = ""
+          } else if (!isDispo) {
+            usernameError.innerText = "Username not available"
+          } else {
+            usernameError.innerText = "Invalid Username format"
+          }
+        })
+      })
+
+      console.log(email)
+      email.addEventListener('input', async (event) => {
+
+        checkIdentifierDisponibility(event.target.value).then(isDispo => {
+          console.log(event.target.value)
+          console.log("---------------", emailRegex.test(event.target.value))
+          console.log("-------     --------", isDispo)
+          if (emailRegex.test(event.target.value) && isDispo) { 
+            emailError.innerText = ""
+          } else if (!isDispo) {
+            emailError.innerText = "Email not available"
+          } else {
+            emailError.innerText = "Invalid email format"
+          }
+          if (!usernameError && !emailError && !passwordError) {
+            submitButtom.disabled = false
+          } else {
+            submitButtom.disabled = true
+          }
+        })
+      })
+
+      password.addEventListener('input', (event) => {
+        if (password.value.length < 8) {
+          passwordError.innerText = "Password must be at least 8 chars"
+        } else {
+            passwordError.innerText = ""
+        }
+        if (!usernameError && !emailError && !passwordError) {
+          submitButtom.disabled = false
+        } else {
+          submitButtom.disabled = true
+        }
+      })
+
+      passwordConfirmation.addEventListener('input', (event) => {
+        if (password.value != passwordConfirmation.value) {
+          console.log(password.value, passwordConfirmation.value)
+          passwordError.innerText = "Confirmation Password not identical"
+        } else {
+            passwordError.innerText = ""
+        }
+        if (!usernameError && !emailError && !passwordError) {
+          submitButtom.disabled = false
+        } else {
+          submitButtom.disabled = true
+        }
+      })
     </script>
   </body>
 </html>

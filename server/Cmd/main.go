@@ -34,6 +34,9 @@ func main() {
 	http.HandleFunc("/Sign_In", Handlers.HandleSignIn)
 	http.HandleFunc("/Sign_Up", Handlers.HandleSignUp)
 	http.HandleFunc("/api/auth/status", Handlers.HandleAuthStatus)
+	http.HandleFunc("/api/checkEmail", Handlers.HandleIdentifierDisponibility)
+	http.HandleFunc("/api/isValidAuth", Handlers.HandleIsValidCredentials)
+	
 
 	// Protected routes
 	http.HandleFunc("/Comment", middleware.ValidateSession(Handlers.HandleComment))

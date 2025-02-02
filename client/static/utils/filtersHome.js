@@ -4,18 +4,17 @@ const categoryFilterButtons = document.getElementById("categoryFilterButtons");
 const filterButton = document.getElementById("filterButton");
 const postsDivs = document.getElementsByClassName('post-card')
 
-
-// Check authentication status and update navbar
-checkAuthStatus().then((isAuthenticated) => {
-  if (!isAuthenticated) {
-    filterButton.remove()
-  }
-});
-
 // Read and parse json (takes a string and returns the parsed object)
 const postsData = JSON.parse(document.getElementById("postsData").textContent);
 console.log(postsData)
 if (postsData) {
+
+    // Check authentication status and update navbar
+  checkAuthStatus().then((isAuthenticated) => {
+    if (!isAuthenticated) {
+      filterButton.remove()
+    }
+  });
 
   var maxLikesRatio = 0;
   var searchValue = "";
@@ -52,8 +51,10 @@ if (postsData) {
     const { value, parent } = current; // Destructure to get value and parent
   
     if (parent == "category") {
-      searchExemples.add(value + " - " + parent);
-      categories.add(value);
+      value.forEach((value)=>{
+        categories.add(value);
+        searchExemples.add(value + " - " + parent);
+      })
     } else if (parent == "user_name" || parent == "title") {
       //&& (parent != "image")
       searchExemples.add(value + " - " + parent);
@@ -84,6 +85,7 @@ if (postsData) {
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Categories Buttons
+  console.log(categories)
   categories.forEach((item) => {
     if (item != "") {
       categoryFilterButtons.innerHTML +=
@@ -164,7 +166,7 @@ if (postsData) {
     postsData.forEach((post, index) => {
       const isTargetedBySearch =
         post.user_name.toLowerCase().includes(searchValue) ||
-        post.category.toLowerCase().includes(searchValue) ||
+        post.category.some((item)=>item.toLowerCase().includes(searchValue)) ||
         post.title.toLowerCase().includes(searchValue);
   
       const date = new Date(post.created_at)
@@ -175,8 +177,8 @@ if (postsData) {
       const postRatio = postsData[index].nbr_like - postsData[index].nbr_dislike
       const isTargetedByLikesRatio = likesFilterValue.min <= postRatio && postRatio <= likesFilterValue.max
   
-      // const isTargetedByCategories = Object.keys(selectedCategories).length === 0 || post.categories.some((cat)=>selectedCategories[cat])
-      if (isTargetedBySearch && isTragetedByCreationDate && isTargetedByLikesRatio) {
+      const isTargetedByCategories = Object.keys(selectedCategories).length === 0 || post.category.some((cat)=>selectedCategories[cat])
+      if (isTargetedBySearch && isTragetedByCreationDate && isTargetedByLikesRatio && isTargetedByCategories) {
         const item = postsDivs[index]
         item.style.display = "block"
       } else {

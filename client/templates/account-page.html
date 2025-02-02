@@ -65,6 +65,12 @@
       </div>
     </div>
 
+    <script type="application/json" id="postsData">
+      {{.}}
+    </script>
+    <script type="module">
+      console.log(document.getElementById('postsData').innerHTML)
+    </script>
     <script src="../static/utils/theme.js"></script>
   </body>
 </html>

@@ -34,15 +34,13 @@
               id="email"
               name="email"
               required
-              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
               title="Please enter a valid email address."
               aria-label="Email"
               aria-describedby="email-help"
-              maxlength="400"
+              maxlength="50"
+              placeholder="Please enter your email address."
             />
-            <span id="email-help" class="sr-only"
-              >Please enter your email address.</span
-            >
+            <div id="emailError"></div>
           </div>
           <div class="form-group">
             <label for="password">Password</label>
@@ -55,17 +53,17 @@
               title="Password must be at least 8 characters long."
               aria-label="Password"
               aria-describedby="password-help"
-              maxlength="400"
+              maxlength="20"
+              placeholder="Please enter your password."
             />
-            <span id="password-help" class="sr-only"
-              >Please enter your password.</span
-            >
+          <div id="passwordError"></div>
           </div>
           <button
             type="submit"
             class="btn btn-primary"
             style="width: 100%"
             id="submit-button"
+            disabled
           >
             Sign In
           </button>
@@ -77,15 +75,88 @@
       </div>
     </div>
     <script src="../static/utils/theme.js"></script>
-    <script>
-      // Disable the submit button while the form is being processed
-      document
-        .getElementById("signin-form")
-        .addEventListener("submit", function () {
-          document.getElementById("submit-button").disabled = true;
-          document.getElementById("submit-button").textContent =
-            "Signing In...";
-        });
+    <script type="module">
+
+      
+      const submitButton = document.getElementById('submit-button')
+      const passwordErrorDiv = document.getElementById('passwordError')
+      
+      
+      const emailErrorDiv = document.getElementById('emailError')
+      submitButton.disabled = true;
+
+
+      if (!emailErrorDiv.innerText && !passwordErrorDiv.innerText) {
+        submitButton.disabled = false;
+      } else {
+        submitButton.disabled = true;
+      }
+
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+      const checkIsValidCredentials = async (email, password) => {
+        try {
+          const response = await fetch("/api/isValidAuth",  {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ email: email, password: password})
+          })
+          if (!response.ok) {
+            throw new Error("Failed to fetch email disponibility...");
+          }
+          const data = await response.json();
+          return data.isValid;
+        } catch (error) {
+          console.error("Error checking email disponibility:", error);
+          return false;
+        }
+      }
+
+      
+      submitButton.addEventListener('click', (event) => {
+        event.preventDefault()
+        checkIsValidCredentials(email.value, password.value).then((isValid) => {
+          if (isValid) {
+            document.getElementById('signin-form').submit();
+          } else {
+            passwordErrorDiv.innerText = "Invalid Email or Password credentials"
+          }
+        })
+      })
+      
+
+      document.getElementById('email').addEventListener('input', (event) => {
+        console.log(emailRegex, event.target.value)
+        if (emailRegex.test(event.target.value)) {
+          emailErrorDiv.innerText = ""
+        } else {
+          emailErrorDiv.innerText = "Invalid email address"
+        }
+
+        if (!emailErrorDiv.innerText && !passwordErrorDiv.innerText) {
+          submitButton.disabled = false;
+        } else {
+          submitButton.disabled = true;
+        }
+
+      })
+
+      document.getElementById('password').addEventListener('input', (event) => {
+        if (event.target.value.length > 7) {
+          passwordErrorDiv.innerText = ""
+        } else {
+          passwordErrorDiv.innerText = "Password less than 8 characters"
+        }
+
+        if (!emailErrorDiv.innerText && !passwordErrorDiv.innerText) {
+          submitButton.disabled = false;
+        } else {
+          submitButton.disabled = true;
+        }
+        
+      })
     </script>
   </body>
 </html>

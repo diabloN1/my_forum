@@ -30,13 +30,15 @@
               placeholder="Enter your name"
               name="name"
               id="username"
-              maxlength="400"
+              maxlength="20"
               required
             />
+            <div id="usernameError"></div>
           </div>
           <div class="form-group">
-            <label for="email" maxlength="400">Email</label>
+            <label for="email" maxlength="50">Email</label>
             <input type="email" id="email" name="email" required />
+            <div id="emailError"></div>
           </div>
           <div class="form-group">
             <label for="password" >Password</label>
@@ -49,7 +51,7 @@
               title="Password must be at least 8 characters long."
               aria-label="Password"
               aria-describedby="password-help"
-              maxlength="400"
+              maxlength="20"
             />
           </div>
           <div class="form-group">
@@ -63,10 +65,11 @@
               title="Password must be at least 8 characters long."
               aria-label="Password"
               aria-describedby="password-help"
-              maxlength="400"
+              maxlength="20"
             />
+            <div id="passwordError"></div>
           </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%">
+          <button type="submit" class="btn btn-primary" style="width: 100%" id="submitButtom">
             Sign Up
           </button>
         </form>
@@ -77,5 +80,83 @@
       </div>
     </div>
     <script src="../static/utils/theme.js"></script>
+    <script type="module" >
+      async function checkIdentifierDisponibility(checkIdentifierDisponibility) {
+        try {
+          const response = await fetch("/api/checkEmail?identifier="+checkIdentifierDisponibility);
+          if (!response.ok) {
+            throw new Error("Failed to fetch email disponibility...");
+          }
+          const data = await response.json();
+          return data.isDisponible;
+        } catch (error) {
+          console.error("Error checking email disponibility:", error);
+          return false;
+        }
+      }
+      const username = document.getElementById('username')
+      const email = document.getElementById('email')
+      const password = document.getElementById('password')
+      const passwordConfirmation = document.getElementById('confirm-password')
+
+      const usernameError = document.getElementById('usernameError')
+      const emailError = document.getElementById('emailError')
+      const passwordError = document.getElementById('passwordError')
+
+      const submitButtom = document.getElementById('submitButtom')
+
+
+      const usernameRegex = /^[a-z0-9_]{1,20}$/;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+
+      submitButtom.addEventListener('click', (event)=>{
+        if (usernameError.innerText || emailError.innerText || passwordError.innerText) {
+          event.preventDefault()
+        }
+      })
+
+      username.addEventListener('input', (event) => {
+        checkIdentifierDisponibility("@" + event.target.value).then(isDispo => {
+          if (usernameRegex.test(event.target.value) && isDispo) { 
+            usernameError.innerText = ""
+          } else if (!isDispo) {
+            usernameError.innerText = "Username not available"
+          } else {
+            usernameError.innerText = "Invalid Username format"
+          }
+        })
+      })
+
+      email.addEventListener('input', (event) => {
+        checkIdentifierDisponibility(event.target.value).then(isDispo => {
+          console.log("-- - -- - ", isDispo)
+          if (emailRegex.test(event.target.value) && isDispo) { 
+            emailError.innerText = ""
+          } else if (!isDispo) {
+            emailError.innerText = "Email not available"
+          } else {
+            emailError.innerText = "Invalid email format"
+          }
+        })
+      })
+
+      password.addEventListener('input', (event) => {
+        if (password.value.length < 8) {
+          passwordError.innerText = "Password must be at least 8 chars"
+        } else {
+            passwordError.innerText = ""
+        }
+      })
+
+      passwordConfirmation.addEventListener('input', (event) => {
+        if (password.value != passwordConfirmation.value) {
+          console.log(password.value, passwordConfirmation.value)
+          passwordError.innerText = "Confirmation Password not identical"
+        } else {
+            passwordError.innerText = ""
+        }
+      })
+    </script>
   </body>
 </html>

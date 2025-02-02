@@ -19,7 +19,7 @@ func ValidateSession(next http.HandlerFunc) http.HandlerFunc {
 
         // Validate the session ID and get the user ID
         sessionID := cookie.Value
-        userID, valid := Cruds.ValidateSessionIDAndGetUserID(sessionID, r.RemoteAddr)
+        userID, valid := Cruds.ValidateSessionIDAndGetUserID(sessionID)
         if !valid {
             // Invalid session, redirect to sign-in page
             http.Redirect(w, r, "/Sign_In", http.StatusSeeOther)

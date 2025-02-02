@@ -874,3 +874,9 @@ body {
   border-color: var(--border);
   box-shadow: none;
 }
+
+.auth-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
