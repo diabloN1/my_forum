@@ -20,115 +20,159 @@
         <form method="post" id="create-post-form" enctype="multipart/form-data">
           <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" id="title" required name="title" maxlength="50"/>
-            <div id="customTitleError"></div>
+            <input
+              type="text"
+              id="title"
+              required
+              name="title"
+              maxlength="50"
+            />
+            <div id="customTitleError" class="error-message"></div>
           </div>
           <div class="form-group">
-            <label for="category">Category</label>
+            <label for="categories">Category</label>
             {{if .}}
-              <select id="categories">
-                {{range .}}
-                <option value="{{.CategoryName}}">{{.CategoryName}}</option>
-                {{end}}
-              </select>
+            <select id="categories" class="mb-4">
+              <option value="">Select a category</option>
+              {{range .}}
+              <option value="{{.CategoryName}}">{{.CategoryName}}</option>
+              {{end}}
+            </select>
             {{end}}
-            <input type="text" id="category"  maxlength="50"/> <!--//name="category"-->
-            <button id="addButton" disabled>Add +</button>
-            <div id="customCatError"></div>
-            <label>Selected categories</label> 
+            <div class="category-input-group">
+              <input
+                type="text"
+                id="category"
+                maxlength="50"
+                placeholder="Add custom category"
+              />
+              <button id="addButton" disabled>Add +</button>
+            </div>
+            <div id="customCatError" class="error-message"></div>
+            <label class="mt-4">Selected categories</label>
             <input type="text" name="categories" id="postCategories" hidden />
             <div id="selectedCatDiv"></div>
           </div>
           <div class="form-group">
             <label for="content">Content</label>
-            <textarea id="content" rows="10" name="content" maxlength="1200" required></textarea>
+            <textarea
+              id="content"
+              rows="10"
+              name="content"
+              maxlength="1200"
+              required
+            ></textarea>
           </div>
           <div class="form-group">
             <label for="image">Image (optional)</label>
             <input type="file" id="image" name="post_image" accept="image/*" />
           </div>
-          <button type="submit" class="btn btn-primary" id="submitButton">Create Post</button>
+          <button type="submit" class="btn btn-primary" id="submitButton">
+            Create Post
+          </button>
         </form>
       </div>
     </div>
 
     <script src="../static/utils/theme.js"></script>
     <script type="module">
-      let selectedCategories = new Set()
-      console.log(document.getElementById('categories'))
-      if (document.getElementById('categories')) {
-        document.getElementById('categories').addEventListener('click', (event) => {
-          selectedCategories.add(event.target.value)
-          document.getElementById('selectedCatDiv').innerHTML = [...selectedCategories].join(' ')
-          document.getElementById('postCategories').value = [...selectedCategories].join(' ')
-        })
-      }
-      
+      let selectedCategories = new Set();
 
-      // console.log(document.getElementById('categories'))
-      document.getElementById('addButton').addEventListener('click', (e)=>{
-        e.preventDefault()
-        console.log(document.getElementById('category').value)
-        selectedCategories.add("#" + document.getElementById('category').value)
-        document.getElementById('selectedCatDiv').innerHTML = [...selectedCategories].join(' ')
-        document.getElementById('postCategories').value = [...selectedCategories].join(' ')
-      })
-      
+      // Update select event to use change instead of click
+      if (document.getElementById("categories")) {
+        document
+          .getElementById("categories")
+          .addEventListener("change", (event) => {
+            if (event.target.value) {
+              selectedCategories.add(event.target.value);
+              updateSelectedCategories();
+              event.target.value = ""; 
+            }
+          });
+      }
+
+      document.getElementById("addButton").addEventListener("click", (e) => {
+        e.preventDefault();
+        const categoryValue = document.getElementById("category").value;
+        if (categoryValue) {
+          selectedCategories.add("#" + categoryValue);
+          updateSelectedCategories();
+          document.getElementById("category").value = "";
+          document.getElementById("addButton").disabled = true;
+        }
+      });
+
+      // Function to update the display of selected categories
+      function updateSelectedCategories() {
+        document.getElementById("selectedCatDiv").innerHTML = [
+          ...selectedCategories,
+        ]
+          .map((cat) => `<span class="category-tag">${cat}</span>`)
+          .join("");
+        document.getElementById("postCategories").value = [
+          ...selectedCategories,
+        ].join(" ");
+      }
+
+      // Enable/disable add button based on input
+      document.getElementById("category").addEventListener("input", (event) => {
+        document.getElementById("addButton").disabled = !event.target.value;
+      });
     </script>
     <script>
-        const postImage = document.getElementById("image");
+      const postImage = document.getElementById("image");
 
-        postImage.addEventListener("change", (event) => {
-          const file = event.target.files[0];
+      postImage.addEventListener("change", (event) => {
+        const file = event.target.files[0];
 
-          // Validate the file (optional)
-          if (file) {
-            if (!file.type.startsWith("image/")) {
-              alert("Please select a valid image file.");
-              postImage.value = ""; // Reset the input
-              return;
-            }
-
-            if (file.size > 20 * 1024 * 1024) {
-              // 2MB limit
-              alert("File size exceeds 20MB. Please choose a smaller file.");
-              postImage.value = ""; // Reset the input
-              return;
-            }
+        // Validate the file (optional)
+        if (file) {
+          if (!file.type.startsWith("image/")) {
+            alert("Please select a valid image file.");
+            postImage.value = ""; // Reset the input
+            return;
           }
-        });
+
+          if (file.size > 20 * 1024 * 1024) {
+            // 2MB limit
+            alert("File size exceeds 20MB. Please choose a smaller file.");
+            postImage.value = ""; // Reset the input
+            return;
+          }
+        }
+      });
     </script>
 
     <script type="module">
-      const category = document.getElementById('category')
-      const title = document.getElementById('title')
-      const catRegex = /^[a-zA-Z0-9-_]{1,50}$/
+      const category = document.getElementById("category");
+      const title = document.getElementById("title");
+      const catRegex = /^[a-zA-Z0-9-_]{1,50}$/;
 
-      const catError = document.getElementById('customCatError')
-      const titleError = document.getElementById('customTitleError')
+      const catError = document.getElementById("customCatError");
+      const titleError = document.getElementById("customTitleError");
 
-      const addButton = document.getElementById('addButton')
-      const submitButton = document.getElementById('submitButton')
+      const addButton = document.getElementById("addButton");
+      const submitButton = document.getElementById("submitButton");
 
-      category.addEventListener('input', (event) => {
+      category.addEventListener("input", (event) => {
         if (catRegex.test(event.target.value)) {
-          catError.innerText = ""
-          addButton.disabled = false
+          catError.innerText = "";
+          addButton.disabled = false;
         } else {
-          catError.innerText = "Invalid category"
-          addButton.disabled = true
+          catError.innerText = "Invalid category";
+          addButton.disabled = true;
         }
-      })
+      });
 
-      title.addEventListener('input', (event) => {
+      title.addEventListener("input", (event) => {
         if (catRegex.test(event.target.value)) {
-          titleError.innerText = ""
-          submitButton.disabled = false
+          titleError.innerText = "";
+          submitButton.disabled = false;
         } else {
-          titleError.innerText = "Invalid title"
-          submitButton.disabled = true
+          titleError.innerText = "Invalid title";
+          submitButton.disabled = true;
         }
-      })
+      });
     </script>
   </body>
 </html>

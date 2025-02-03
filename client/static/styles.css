@@ -218,32 +218,68 @@ body {
   overflow: hidden;
   transition: transform 0.2s;
   border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
 }
 
 .post-card:hover {
   transform: translateY(-2px);
 }
 
-.post-image {
+/* Image container to maintain aspect ratio */
+.post-image-container {
+  position: relative;
   width: 100%;
-  height: 200px;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+}
+
+.post-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  background-color: var(--surface-light); /* Placeholder background */
+}
+
+/* For posts without images */
+.post-card:not(:has(img[src])) .post-image-container,
+.post-card img[src=""] + .post-image-container {
+  display: none;
 }
 
 .post-content {
   padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .post-title {
   color: var(--primary);
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
+  /* Prevent long titles from breaking layout */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .post-description {
   color: var(--text-secondary);
   font-size: 0.9rem;
   margin-bottom: 1rem;
+  flex: 1;
+  /* Limit text to 3 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .post-meta {
@@ -252,6 +288,7 @@ body {
   align-items: center;
   color: var(--text-secondary);
   font-size: 0.875rem;
+  margin-top: auto;
 }
 
 .post-actions {
@@ -278,91 +315,13 @@ body {
   color: var(--primary);
 }
 
-/* Messages Styles */
-.messages-container {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 1rem;
-  height: calc(100vh - 84px);
-  margin-top: 84px;
-  background-color: var(--surface);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.chat-list {
-  border-right: 1px solid var(--border);
-  overflow-y: auto;
-}
-
-.chat-item {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.chat-item:hover {
-  background-color: var(--surface-light);
-}
-
-.chat-item.active {
-  background-color: var(--surface-light);
-  border-left: 3px solid var(--primary);
-}
-
-.chat-main {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--background);
-}
-
-.chat-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-  background-color: var(--surface);
-}
-
-.chat-messages {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 1rem;
-}
-
-.message {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  border-radius: 8px;
-  max-width: 70%;
-}
-
-.message.sent {
-  background-color: var(--primary);
-  color: var(--background);
-  margin-left: auto;
-}
-
-.message.received {
-  background-color: var(--surface);
-  margin-right: auto;
-}
-
-.chat-input {
-  padding: 1rem;
-  background-color: var(--surface);
-  display: flex;
-  gap: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.chat-input input {
-  flex-grow: 1;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 4px;
-  background-color: var(--surface-light);
-  color: var(--text);
-}
+/* Profile image styles
+.profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+} */
 
 /* Profile Styles */
 .profile-container {
@@ -558,14 +517,15 @@ body {
   pointer-events: none;
 }
 
+/* Post Detail Layout */
 .post-detail-layout {
   display: grid;
   grid-template-columns: 1fr 350px;
   gap: 1.5rem;
   align-items: start;
-  padding: 20px;
 }
 
+/* Post Detail Main Content */
 .post-detail-main {
   overflow-y: auto;
 }
@@ -636,12 +596,24 @@ body {
 }
 
 .post-detail-main .post-card {
-  height: auto;
+  background-color: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
   transform: none;
 }
 
 .post-detail-main .post-card:hover {
   transform: none;
+}
+
+/* Post Detail Image */
+.post-detail-main .post-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  position: static; /* Override the home page absolute positioning */
+  margin-bottom: 1rem;
 }
 
 .comments-sidebar {
@@ -690,7 +662,7 @@ body {
   border-radius: 4px;
   color: var(--text);
   margin-bottom: 0.5rem;
-  overflow-x: auto  ;
+  overflow-x: auto;
 }
 
 .comment-submit {
@@ -879,4 +851,196 @@ body {
   display: flex;
   gap: 2rem;
   align-items: center;
+}
+
+/* Error message styles */
+.error-message {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Styled select for categories */
+select {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.875rem;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em;
+}
+
+/* Style for the add button in create post */
+#addButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary);
+  color: var(--background);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+#addButton:disabled {
+  background-color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Category input group */
+.category-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.category-input-group input {
+  flex: 1;
+}
+
+/* Category tags */
+.category-tag {
+  display: inline-block;
+  background-color: var(--primary);
+  color: var(--background);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  margin: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Style for selected categories */
+#selectedCatDiv {
+  margin-top: 0.5rem;
+  min-height: 2rem;
+  padding: 0.5rem;
+  background-color: var(--surface-light);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+#selectedCatDiv span {
+  background-color: var(--primary);
+  color: var(--background);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+/* Adjust spacing for create post form */
+#create-post-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Style for file input */
+input[type="file"] {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+/* Error Page Styles */
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+.error-content {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+}
+
+.error-logo {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 2rem;
+}
+
+.error-message {
+  margin-bottom: 2rem;
+}
+
+.error-status {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--error);
+  margin-bottom: 1rem;
+}
+
+.error-description {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.error-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary);
+  color: var(--background);
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.error-button:hover {
+  background-color: var(--primary-glow);
+}
+
+.error-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-content > * {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.error-content > *:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.error-content > *:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.error-content > *:nth-child(3) {
+  animation-delay: 0.5s;
 }

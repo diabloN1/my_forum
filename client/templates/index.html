@@ -41,11 +41,15 @@
         <datalist id="searchExemples"></datalist>
         <br />
         <div class="filter-section">
-          <label for="creationDateFilter">Creation date</label><span id="creationMin" style="color: rgb(0, 255, 0);"></span> | <span id="creationMax" style="color: rgb(0, 255, 0);"></span>
+          <label for="creationDateFilter">Creation date</label
+          ><span id="creationMin" style="color: rgb(0, 255, 0)"></span> |
+          <span id="creationMax" style="color: rgb(0, 255, 0)"></span>
           <div id="creationDateFilter"></div>
         </div>
         <div class="filter-section">
-          <label for="likesFilter">Most rated</label><span id="rateMin" style="color: rgb(0, 255, 0);"></span> | <span id="rateMax" style="color: rgb(0, 255, 0);"></span>
+          <label for="likesFilter">Most rated</label
+          ><span id="rateMin" style="color: rgb(0, 255, 0)"></span> |
+          <span id="rateMax" style="color: rgb(0, 255, 0)"></span>
           <div id="likesFilter"></div>
         </div>
       </div>
@@ -57,13 +61,21 @@
           onclick="window.location.href='/post/?id={{.ID}}';"
           style="cursor: pointer"
         >
-          <img src="{{.Image}}" alt="" class="post-image" />
+          {{if .Image}}
+          <div class="post-image-container">
+            <img src="{{.Image}}" alt="Post image" class="post-image" />
+          </div>
+          {{end}}
           <div class="post-content">
             <h2 class="post-title">{{.Title}}</h2>
             <p class="post-description">{{.Content}}</p>
             <div class="post-meta">
-              <span>Posted by {{.UserName}}</span>
-              <span>{{.Categories}}</span>
+              <div class="post-author">
+                <span>Posted by {{.UserName}}</span>
+              </div>
+              <div class="post-categories">
+                <span>{{.Categories}}</span>
+              </div>
             </div>
             <div class="post-actions">
               <form action="/IsLike" method="post" class="action-form">
