@@ -18,14 +18,21 @@
         <div class="post-detail-main">
           <div class="post-card">
             {{if .Post.Image}}
-            <img src="{{.Post.Image}}" alt="Post image" class="post-image" />
+            <div class="post-image-container">
+              <img src="{{.Post.Image}}" alt="Post image" class="post-image" />
+              <button class="expand-image-btn">Expand</button>
+            </div>
             {{end}}
             <div class="post-content">
               <h1 class="post-title">{{.Post.Title}}</h1>
               <p class="post-description">{{.Post.Content}}</p>
               <div class="post-meta">
                 <span>Posted by {{.User.Name}}</span>
-                <span>{{.Post.Categories}}</span>
+                <div class="post-categories">
+                  {{range $index, $category := .Post.Categories}}
+                  <span class="category-tag">{{$category}}</span>
+                  {{end}}
+                </div>
               </div>
               <div class="post-actions">
                 <form action="/IsLike" method="post" class="action-form">
@@ -123,6 +130,15 @@
         </div>
       </div>
     </div>
+    <div id="fullscreen-image" class="fullscreen-image">
+      <img
+        src="/placeholder.svg"
+        alt="Full size image"
+        class="fullscreen-image-content"
+      />
+      <button class="close-fullscreen-btn">&times;</button>
+    </div>
     <script src="../static/utils/theme.js"></script>
+    <script src="../static/utils/full-screen-iamge.js"></script>
   </body>
 </html>

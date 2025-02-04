@@ -556,9 +556,8 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         }
         
 
-        fmt.Println("caaaaaaaaats", categories)
+
         isValidInputs := title != "" && len(categories) != 0 && content != "" && len(title) < 50 && len(categories) < 10 && len(content) < 1200
-        fmt.Println(isValidInputs)
         if isValidInputs && Cruds.InsertPost(data.ID, image, title, content, categories) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return
