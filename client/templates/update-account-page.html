@@ -39,10 +39,9 @@
             <label for="username">Username</label>
             <input
               type="text"
-              value="{{.Name}}"
+              placeholder="{{.Name}}"
               id="username"
               name="name"
-              required
               maxlength="20"
             />
             <div id="usernameError"></div>
@@ -51,7 +50,7 @@
             <label for="email">Email</label>
             <input
               type="email"
-              value="{{.Email}}"
+              placeholder="{{.Email}}"
               id="email"
               name="email"
               maxlength="50"
@@ -61,11 +60,12 @@
           <div class="form-group">
             <label for="new-password">New Password (optional)</label>
             <input type="password" id="password" name="password" maxlength="20"/>
+            <div id="passwordError"></div>
           </div>
           <div class="form-group">
             <label for="confirm-new-password">Confirm New Password</label>
             <input type="password" id="confirm-password" name="passwordConfirmation" maxlength="20"/>
-            <div id="passwordError"></div>
+            <div id="passwordConfirmationError"></div>
           </div>
           <button type="submit" class="btn btn-primary" id="submitButtom">Save Changes</button>
         </form>
@@ -102,7 +102,7 @@
               previewAvatar.src = e.target.result;
             };
             reader.readAsDataURL(file);
-          }co
+          }
         });
       });
     </script>
@@ -128,13 +128,15 @@
       const password = document.getElementById('password')
       const passwordConfirmation = document.getElementById('confirm-password')
       const submitButtom = document.getElementById('submitButtom')
+      const form = document.getElementById('edit-profile-form')
 
       const usernameError = document.getElementById('usernameError')
       const emailError = document.getElementById('emailError')
       const passwordError = document.getElementById('passwordError')
+      const passwordConfirmationError = document.getElementById('passwordConfirmationError')
+      
 
-
-      const usernameRegex = /^[a-z0-9_]{1,20}$/;
+      const usernameRegex = /^[a-z0-9_]{0,20}$/;
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 
@@ -157,45 +159,46 @@
           console.log(event.target.value)
           console.log("---------------", emailRegex.test(event.target.value))
           console.log("-------     --------", isDispo)
-          if (emailRegex.test(event.target.value) && isDispo) { 
+          if (!event.target.value || (emailRegex.test(event.target.value) && isDispo)) { 
             emailError.innerText = ""
           } else if (!isDispo) {
             emailError.innerText = "Email not available"
           } else {
             emailError.innerText = "Invalid email format"
           }
-          if (!usernameError && !emailError && !passwordError) {
-            submitButtom.disabled = false
-          } else {
-            submitButtom.disabled = true
-          }
         })
       })
 
       password.addEventListener('input', (event) => {
-        if (password.value.length < 8) {
+        if (password.value && password.value.length < 8) {
           passwordError.innerText = "Password must be at least 8 chars"
         } else {
             passwordError.innerText = ""
         }
-        if (!usernameError && !emailError && !passwordError) {
-          submitButtom.disabled = false
+        if (password.value != passwordConfirmation.value) {
+          console.log(password.value, passwordConfirmation.value)
+          passwordConfirmationError.innerText = "Confirmation Password not identical"
         } else {
-          submitButtom.disabled = true
+            passwordConfirmationError.innerText = ""
         }
       })
 
       passwordConfirmation.addEventListener('input', (event) => {
         if (password.value != passwordConfirmation.value) {
           console.log(password.value, passwordConfirmation.value)
-          passwordError.innerText = "Confirmation Password not identical"
+          passwordConfirmationError.innerText = "Confirmation Password not identical"
         } else {
-            passwordError.innerText = ""
+            passwordConfirmationError.innerText = ""
         }
-        if (!usernameError && !emailError && !passwordError) {
-          submitButtom.disabled = false
-        } else {
-          submitButtom.disabled = true
+      })
+
+      submitButtom.addEventListener('click', (event) => {
+        event.preventDefault()
+        console.log(1111111111111)
+        if (!usernameError.value && !emailError.value && !passwordError.value) {
+          console.log(username)
+          
+          form.submit()
         }
       })
     </script>

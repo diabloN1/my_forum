@@ -9,6 +9,8 @@ Handle methods allowed and general errors handling...
 
 diablo :
 ---------------- middleware username + auth + test singlepage idea fetching request the aplying it with js without reload
+- Edit Profile (typing password invalid than valid confirmation)
+- using the user's email and username
 
 anass :
 - styling.

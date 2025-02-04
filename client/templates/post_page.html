@@ -16,7 +16,7 @@
     <div class="container">
       <div class="post-detail-layout">
         <div class="post-detail-main">
-          <div class="post-card">
+          <div>
             <div class="post-content">
               <img
                 src="{{.Post.Image}}"
@@ -121,11 +121,14 @@
               name="content"
               class="comment-input"
             />
-            <button type="submit" class="comment-submit" maxlength="4000">Comment</button>
+            <button type="submit" class="comment-submit" maxlength="4000">
+              Comment
+            </button>
           </form>
         </div>
       </div>
     </div>
     <script src="../static/utils/theme.js"></script>
+    <script type="module" src="../static/utils/liveParser.js"></script>
   </body>
 </html>

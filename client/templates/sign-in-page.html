@@ -56,7 +56,7 @@
               maxlength="20"
               placeholder="Please enter your password."
             />
-          <div id="passwordError"></div>
+            <div id="passwordError"></div>
           </div>
           <button
             type="submit"
@@ -74,17 +74,14 @@
         </p>
       </div>
     </div>
+    
     <script src="../static/utils/theme.js"></script>
     <script type="module">
+      const submitButton = document.getElementById("submit-button");
+      const passwordErrorDiv = document.getElementById("passwordError");
 
-      
-      const submitButton = document.getElementById('submit-button')
-      const passwordErrorDiv = document.getElementById('passwordError')
-      
-      
-      const emailErrorDiv = document.getElementById('emailError')
+      const emailErrorDiv = document.getElementById("emailError");
       submitButton.disabled = true;
-
 
       if (!emailErrorDiv.innerText && !passwordErrorDiv.innerText) {
         submitButton.disabled = false;
@@ -96,13 +93,13 @@
 
       const checkIsValidCredentials = async (email, password) => {
         try {
-          const response = await fetch("/api/isValidAuth",  {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json"
-              },
-              body: JSON.stringify({ email: email, password: password})
-          })
+          const response = await fetch("/api/isValidAuth", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: email, password: password }),
+          });
           if (!response.ok) {
             throw new Error("Failed to fetch email disponibility...");
           }
@@ -112,27 +109,26 @@
           console.error("Error checking email disponibility:", error);
           return false;
         }
-      }
+      };
 
-      
-      submitButton.addEventListener('click', (event) => {
-        event.preventDefault()
+      submitButton.addEventListener("click", (event) => {
+        event.preventDefault();
         checkIsValidCredentials(email.value, password.value).then((isValid) => {
           if (isValid) {
-            document.getElementById('signin-form').submit();
+            document.getElementById("signin-form").submit();
           } else {
-            passwordErrorDiv.innerText = "Invalid Email or Password credentials"
+            passwordErrorDiv.innerText =
+              "Invalid Email or Password credentials";
           }
-        })
-      })
-      
+        });
+      });
 
-      document.getElementById('email').addEventListener('input', (event) => {
-        console.log(emailRegex, event.target.value)
+      document.getElementById("email").addEventListener("input", (event) => {
+        console.log(emailRegex, event.target.value);
         if (emailRegex.test(event.target.value)) {
-          emailErrorDiv.innerText = ""
+          emailErrorDiv.innerText = "";
         } else {
-          emailErrorDiv.innerText = "Invalid email address"
+          emailErrorDiv.innerText = "Invalid email address";
         }
 
         if (!emailErrorDiv.innerText && !passwordErrorDiv.innerText) {
@@ -140,14 +136,13 @@
         } else {
           submitButton.disabled = true;
         }
+      });
 
-      })
-
-      document.getElementById('password').addEventListener('input', (event) => {
+      document.getElementById("password").addEventListener("input", (event) => {
         if (event.target.value.length > 7) {
-          passwordErrorDiv.innerText = ""
+          passwordErrorDiv.innerText = "";
         } else {
-          passwordErrorDiv.innerText = "Password less than 8 characters"
+          passwordErrorDiv.innerText = "Password less than 8 characters";
         }
 
         if (!emailErrorDiv.innerText && !passwordErrorDiv.innerText) {
@@ -155,8 +150,7 @@
         } else {
           submitButton.disabled = true;
         }
-        
-      })
+      });
     </script>
   </body>
 </html>
