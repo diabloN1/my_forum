@@ -705,11 +705,4 @@ func HandleIsValidCredentials(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]bool{
         "isValid": isValid,
     })
-
-    // user := Cruds.GetUser(email)
-    // isValid := user == nil
-    // w.Header().Set("Content-Type", "application/json")
-    // json.NewEncoder(w).Encode(map[string]bool{
-    //     "isValid": isValid,
-    // })
 }
