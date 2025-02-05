@@ -8,7 +8,7 @@ import (
 )
 
 func Migrate() {
-	query, err := os.ReadFile("../Database/modules.sql")
+	query, err := os.ReadFile("../tmp/modules.sql")
 	if err != nil {
 		log.Fatal(err)
 	}
