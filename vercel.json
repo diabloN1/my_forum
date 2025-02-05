@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "server/cmd/main.go", "use": "@vercel/go" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "server/cmd/main" }
+  ]
+}
