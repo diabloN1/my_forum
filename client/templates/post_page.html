@@ -16,7 +16,7 @@
     <div class="container">
       <div class="post-detail-layout">
         <div class="post-detail-main">
-          <div class="post-card">
+          <div id="backgroundPost">
             {{if .Post.Image}}
             <div class="post-image-container">
               <img src="{{.Post.Image}}" alt="Post image" class="post-image" />
@@ -123,7 +123,7 @@
               placeholder="Add a comment"
               name="content"
               class="comment-input"
-              maxlength="4000"
+              maxlength="1200"
             ></textarea>
             <button type="submit" class="comment-submit">Comment</button>
           </form>
@@ -132,7 +132,6 @@
     </div>
     <div id="fullscreen-image" class="fullscreen-image">
       <img
-        src="/placeholder.svg"
         alt="Full size image"
         class="fullscreen-image-content"
       />

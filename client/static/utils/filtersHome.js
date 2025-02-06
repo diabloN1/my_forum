@@ -3,6 +3,8 @@ const searchInput = document.getElementById("searchInput");
 const categoryFilterButtons = document.getElementById("categoryFilterButtons");
 const filterButton = document.getElementById("filterButton");
 const postsDivs = document.getElementsByClassName("post-card");
+let IsLikedButtonActive = false
+let IsMeButtonActive = false
 
 // Read and parse json (takes a string and returns the parsed object)
 const postsData = JSON.parse(document.getElementById("postsData").textContent);
@@ -166,7 +168,6 @@ if (postsData) {
     showResults();
   });
 
-  console.log(postsData);
   function showResults() {
     postsData.forEach((post, index) => {
       const isTargetedBySearch =
@@ -189,11 +190,16 @@ if (postsData) {
       const isTargetedByCategories =
         Object.keys(selectedCategories).length === 0 ||
         post.category.some((cat) => selectedCategories[cat]);
+      
+      const isTargetedByLikedButton = !IsLikedButtonActive || post.is_user_liked
+      const isTargetedByMeButton = !IsMeButtonActive || post.is_user_owned
       if (
         isTargetedBySearch &&
         isTragetedByCreationDate &&
         isTargetedByLikesRatio &&
-        isTargetedByCategories
+        isTargetedByCategories &&
+        isTargetedByLikedButton &&
+        isTargetedByMeButton
       ) {
         const item = postsDivs[index];
         item.style.display = "block";
@@ -203,6 +209,17 @@ if (postsData) {
       }
     });
   }
+
+  // Liked posts filter
+  document.getElementById('likeFilterButton').addEventListener('click', () => {
+    IsLikedButtonActive = !IsLikedButtonActive
+    showResults()
+  })
+
+  document.getElementById('meFilterButton').addEventListener('click', () => {
+    IsMeButtonActive = !IsMeButtonActive
+    showResults()
+  })
 
   // Get min and max creation date
   function fillCreationDateFilterValue() {

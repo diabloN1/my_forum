@@ -549,6 +549,20 @@ func GetLikesDislikesByPost(id string, isForComment bool) (int, int, error) {
 	return likes, dislikes, nil
 }
 
+func IsLikedByUser(userId, postId string, isComment bool) (bool, error) {
+
+	query := `SELECT count(*) FROM likeDislike WHERE user_id = ? and post_id = ? and is_comment = ? and is_like = TRUE`
+
+	var countLiked int
+	err := GlobVar.DB.QueryRow(query, userId, postId, isComment).Scan(&countLiked)
+	if err != nil {
+		return false, err
+	}
+
+	return countLiked > 0, nil
+}
+
+
 func GetCommentsCountByPost(id string) (int, error) {
 
 	var commentsCount int

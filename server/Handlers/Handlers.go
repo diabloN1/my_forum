@@ -1,6 +1,7 @@
 package Handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -41,7 +42,7 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
     // Extract the post ID from the URL
     postID := r.URL.Query().Get("id")
     if postID == "" {
-        Cruds.ShowError(w, "Post ID is required", http.StatusBadRequest)
+        Cruds.ShowError(w, "Bad request", http.StatusBadRequest)
         return
     }
 
@@ -131,7 +132,6 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
     
     FormValues, err := FillFormValues(w, r)
     if err != nil {
-        fmt.Println("------", err)
 		Cruds.ShowError(w, "500 - Internal server error", http.StatusInternalServerError)
         return
     }
@@ -145,19 +145,20 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 		// Extracting values from the form
 		postId := FormValues["postId"]
 		commentId := FormValues["commentId"]
-		userId := FormValues["userId"]
+		userId := r.Context().Value("userID").(string)
+
 		isLike := FormValues["isLike"] == "true"
         isForComment := FormValues["isComment"] == "true"
         postToRedirect := postId
 
 
+        fmt.Println(userId)
         if isForComment {
             postId = commentId
         }
 
-        fmt.Println("-----------------", postId, userId)
 		// Validate inputs
-		if (postId == "") || userId == "" {
+		if postId == "" || userId == "" {
 			Cruds.ShowError(w, "Invalid input", http.StatusBadRequest)
 			return
 		}
@@ -336,11 +337,20 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := Cruds.GetAllPosts()
 	if err != nil {
-		Cruds.ShowError(w, "500 -11", http.StatusInternalServerError)
+		Cruds.ShowError(w, "500", http.StatusInternalServerError)
 		return
 	}
-    fmt.Println(posts)
-     
+
+    // Retrieve the user ID from the cookie
+    cookie, _ := r.Cookie("Session_ID")
+
+    userID := ""
+    if cookie != nil {
+        // Validate the session ID and get the user ID
+        sessionID := cookie.Value
+        userID, _ = Cruds.ValidateSessionIDAndGetUserID(sessionID)
+    }
+    fmt.Println(userID)
 	if len(posts) > 0 {
 		for i := range posts {
 			//user
@@ -361,6 +371,17 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
                 Cruds.ShowError(w, "500", http.StatusBadRequest)
                 return
             }
+
+            //Is User owned or liked
+            if user.ID == userID {
+                posts[i].IsUserOwned = true
+            }
+
+            posts[i].IsUserLiked, err = Cruds.IsLikedByUser(userID, posts[i].ID, false)
+            if err != nil && err != sql.ErrNoRows {
+                Cruds.ShowError(w, "There was an error fetching posts", http.StatusInternalServerError)       
+                return         
+            }
 		}
 	}
 
@@ -370,7 +391,6 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
     
-    fmt.Println(posts)
 	err = tmpl.Execute(w, posts)
 	if err != nil {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
@@ -476,7 +496,6 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         u1 := Cruds.GetUser(email)
         u2 := Cruds.GetUser(name)
 
-        fmt.Println(email)
         if len(name) == 0 {
             name = data.Name[1:]
             u2 = nil
@@ -492,7 +511,6 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         isValidEmail := email == data.Email || (u1 == nil && emailRegxp.MatchString(email) && len(password) < 20)
         isValidName := name == data.Name || (u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 20)
         isValidPassword := password == "" || password == passwordConfirmation
-        fmt.Println(isValidName, isValidEmail, u2 == nil , !strings.Contains(name, "@") , !strings.Contains(name, " ") , len(name) < 20)
         
         if (!isValidEmail || !isValidName || !isValidPassword) {
             http.Redirect(w, r, "/Update_Profile", http.StatusSeeOther)       
@@ -689,7 +707,6 @@ func HandleIdentifierDisponibility(w http.ResponseWriter, r *http.Request) {
     
     identifier := r.FormValue("identifier")
 
-    fmt.Println(identifier)
     user := Cruds.GetUser(identifier)
     isDisponible := user == nil
 

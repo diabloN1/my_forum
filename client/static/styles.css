@@ -688,6 +688,13 @@ body {
   border: 1px solid var(--border);
 }
 
+#backgroundPost {
+  background-color: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
 .post-detail-main .post-card {
   background-color: var(--surface);
   border-radius: 8px;

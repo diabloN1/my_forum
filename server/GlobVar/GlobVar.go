@@ -30,6 +30,8 @@ type Post struct {
 	NbrComment int `json:"nbr_comment"`
 	NbrLike    int `json:"nbr_like"`
 	NbrDislike int `json:"nbr_dislike"`
+	IsUserOwned bool `json:"is_user_owned"`
+	IsUserLiked bool `json:"is_user_liked"`
 }
 
 type Comment struct {

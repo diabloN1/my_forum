@@ -1,20 +1,12 @@
-tasks :
-
-Does the project handle HTTP status 400 - Bad Requests?
-Handle methods allowed and general errors handling...
-
-- error to when invalid input category backend.
-- remove trailing spacing while inputing.
-
-
 diablo :
----------------- middleware username + auth + test singlepage idea fetching request the aplying it with js without reload
 - Edit Profile (typing password invalid than valid confirmation)
 - using the user's email and username
 
 anass :
 - styling.
-- protect backend Categories input.
+- Does the project handle HTTP status 400 - Bad Requests?
+- Handle methods allowed and general errors handling... (const usernameRegex = /^[a-z0-9_]{1,20}$/; ---- const catRegex = /^[a-zA-Z0-9-_]{1,50}$/;)
+- Max len comment makking huge error
 
 hamza :
 - Dockerfile.

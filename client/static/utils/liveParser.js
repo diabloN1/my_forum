@@ -1,5 +1,4 @@
 // Prevent back navigation
-// window.history.pushState(null, '', window.location.href); // Add an entry to history
 
 window.onpopstate = function() {
   // This will be triggered when the back button is pressed
@@ -15,16 +14,14 @@ const ExecPostRequest = async (path, args) => {
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(args), // { email: email, password: password }
+        body: JSON.stringify(args),
         });
-        if (!response.ok) {
-        throw data;
-        }
         const data = await response.text()
+        console.log(data)
         return data
     } catch (error) {
         console.error(error);
-        return data.text();
+        return false;
     }
 };
 
@@ -36,7 +33,6 @@ const ExecGetRequest = async (path, args) => {
     args = argsString.split("+")
     if (args[args.length-1] === "") args.pop()
     argsString = args.join('+')
-    console.log("request params : ", path, args)
     try {
       const response = await fetch(path+'?'+argsString);
       const data = await response.text()
@@ -47,13 +43,11 @@ const ExecGetRequest = async (path, args) => {
 };
 
 const forms = [...document.getElementsByTagName('form')]
-console.log("forms", forms)
 
-forms.forEach(form => form.addEventListener('submit', (event) => {
-    console.log(form.querySelectorAll('input'))
+forms.forEach(form => form.addEventListener('submit', async (event) => {
     event.preventDefault()
 
-    const formInputs = form.querySelectorAll('input')
+    const formInputs = [...form.querySelectorAll('input'), ...form.querySelectorAll('textarea')]
     let formValues = {}
 
     formInputs.forEach((input) => {
@@ -61,25 +55,20 @@ forms.forEach(form => form.addEventListener('submit', (event) => {
     }) 
 
     if (form.method === "post") {
-      ExecPostRequest(form.action, formValues).then((result) => {
-        if (result == false) {
-            console.log("eroooooooor", formValues)
-            
+      const result = await Promise.resolve(ExecPostRequest(form.action, formValues))
+        if (result === false) {
+            window.alert("There was an error")
         } else {
-        console.log(result)
         const nav = document.getElementById('navbar-placeholder').innerHTML
         document.documentElement.innerHTML = result
-        console.log("heloooo")
         // Manually re-execute any inline scripts (since the browser doesn't do it automatically)
         const scripts = document.querySelectorAll('script');
-        console.log("scripts : ", scripts)
         scripts.forEach((script) => {
           {script.textContent ? eval(script.textContent): null}
           {script.src && script.src != "http://localhost:8080/static/utils/theme.js" && script.src != "../static/utils/theme.js"  ? ExecuteExternalJs(script.src): null} 
         });
         document.getElementById('navbar-placeholder').innerHTML = nav
         }
-      })
     }
 }));
 
@@ -91,7 +80,6 @@ const ExecuteExternalJs = (src) => {
         return response.text();
     })
     .then(data => {
-        console.log(data); // Contents of the index.js file
         eval(data)
     })
     .catch(error => {
@@ -101,24 +89,23 @@ const ExecuteExternalJs = (src) => {
 
 const posts = [...document.getElementsByClassName('post-card')]
 
-posts.forEach((post) => post.addEventListener('click', () => ExecGetRequest("http://localhost:8080/post", {id : post.getAttribute("card-id")})
-  .then((result) => {
-    
-    history.pushState(null, '', "http://localhost:8080/post?id="+post.getAttribute("card-id"))
-    console.log(result)
-    const nav = document.getElementById('navbar-placeholder').innerHTML
-    document.documentElement.innerHTML = result
-    console.log("heloooo")
+posts.forEach((post) => post.addEventListener('click', async () => {
+  const result = await Promise.resolve(ExecGetRequest("http://localhost:8080/post", {id : post.getAttribute("card-id")}))
+  history.pushState(null, '', "http://localhost:8080/post?id="+post.getAttribute("card-id"))
+  if (result === false) {
+    location.reload()
+    return
+  }
+  const nav = document.getElementById('navbar-placeholder').innerHTML
+  document.documentElement.innerHTML = result
 
-    // Manually re-execute any inline scripts (since the browser doesn't do it automatically)
-    const scripts = document.querySelectorAll('script');
-    console.log("scripts : ", scripts)
-    scripts.forEach((script) => {
-        {script.textContent ? eval(script.textContent): null}
-        console.log(script.src)
-        {script.src && script.src != "http://localhost:8080/static/utils/theme.js" && script.src != "../static/utils/theme.js"  ? ExecuteExternalJs(script.src): null} 
-    });
-    document.getElementById('navbar-placeholder').innerHTML = nav
-    console.log("heloooo")
-  })
+  // Manually re-execute any inline scripts (since the browser doesn't do it automatically)
+  const scripts = document.querySelectorAll('script');
+  scripts.forEach((script) => {
+      {script.textContent ? eval(script.textContent): null}
+      console.log(script.src)
+      {script.src && script.src != "http://localhost:8080/static/utils/theme.js" && script.src != "../static/utils/theme.js"  ? ExecuteExternalJs(script.src): null} 
+  });
+  document.getElementById('navbar-placeholder').innerHTML = nav
+}
 ))

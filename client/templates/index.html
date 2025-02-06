@@ -31,7 +31,10 @@
       </div>
       <button id="filterButton"><i class="fa fa-filter"></i> Filters</button>
 
+
       <div id="filterContainer" style="display: none">
+        <button id="likeFilterButton">👍</button>
+        <button id="meFilterButton">@me</button>
         <input
           type="text"
           id="searchInput"
@@ -44,26 +47,18 @@
           <label for="creationDateFilter">Creation date</label
           ><span id="creationMin" style="color: rgb(0, 255, 0)"></span> |
           <span id="creationMax" style="color: rgb(0, 255, 0)"></span>
-          <label for="creationDateFilter">Creation date</label
-          ><span id="creationMin" style="color: rgb(0, 255, 0)"></span> |
-          <span id="creationMax" style="color: rgb(0, 255, 0)"></span>
           <div id="creationDateFilter"></div>
         </div>
         <div class="filter-section">
           <label for="likesFilter">Most rated</label
           ><span id="rateMin" style="color: rgb(0, 255, 0)"></span> |
           <span id="rateMax" style="color: rgb(0, 255, 0)"></span>
-          <label for="likesFilter">Most rated</label
-          ><span id="rateMin" style="color: rgb(0, 255, 0)"></span> |
-          <span id="rateMax" style="color: rgb(0, 255, 0)"></span>
           <div id="likesFilter"></div>
         </div>
       </div>
-
       <div class="posts-grid" id="postsContainer">
         {{range .}}
         <div class="post-card" style="cursor: pointer" card-id="{{.ID}}">
-          <!-- onclick="window.location.href='/post/?id={{.ID}}';" -->
 
           {{if .Image}}
           <div class="post-image-container">
