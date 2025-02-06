@@ -102,6 +102,10 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleComment(w http.ResponseWriter, r *http.Request) {
+    FormValues, err := FillFormValues(w, r)
+    if err != nil {
+        Cruds.ShowError(w, "Error parsing formValues", http.StatusInternalServerError)
+    }
 	if r.URL.Path != "/Comment" {
 		Cruds.ShowError(w, "404", http.StatusNotFound)
 		return
@@ -111,9 +115,9 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    comment := r.FormValue("content")
-    postId := r.FormValue("postId")
-    userId := r.Context().Value("userID").(string)
+    comment := FormValues["content"]
+    postId := FormValues["postId"]
+    userId := FormValues["userId"]
     if strings.TrimSpace(comment) == "" || len(comment) > 2000 {
         http.Redirect(w, r, "/post/?id="+postId, http.StatusSeeOther)
         return 
@@ -124,6 +128,14 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
+    
+    FormValues, err := FillFormValues(w, r)
+    if err != nil {
+        fmt.Println("------", err)
+		Cruds.ShowError(w, "500 - Internal server error", http.StatusInternalServerError)
+        return
+    }
+
 	if r.URL.Path != "/IsLike" {
 		Cruds.ShowError(w, "404 - Page Not Found", http.StatusNotFound)
 		return
@@ -131,11 +143,11 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		// Extracting values from the form
-		postId := r.FormValue("postId")
-		commentId := r.FormValue("commentId")
-		userId, _ := r.Context().Value("userID").(string)
-		isLike := r.FormValue("isLike") == "true"
-        isForComment := r.FormValue("isComment") == "true"
+		postId := FormValues["postId"]
+		commentId := FormValues["commentId"]
+		userId := FormValues["userId"]
+		isLike := FormValues["isLike"] == "true"
+        isForComment := FormValues["isComment"] == "true"
         postToRedirect := postId
 
 
@@ -143,6 +155,7 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
             postId = commentId
         }
 
+        fmt.Println("-----------------", postId, userId)
 		// Validate inputs
 		if (postId == "") || userId == "" {
 			Cruds.ShowError(w, "Invalid input", http.StatusBadRequest)
@@ -463,22 +476,24 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         u1 := Cruds.GetUser(email)
         u2 := Cruds.GetUser(name)
 
+        fmt.Println(email)
         if len(name) == 0 {
-            name = data.Name
+            name = data.Name[1:]
             u2 = nil
         }
         if len(email) == 0 {
             email = data.Email
             u1 = nil
         }
-		if len(password) == 0 || len(name) > 20 {
-			password = ""
-		}
+
+        email= strings.TrimSpace(email)
         
         emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-        isValidEmail := u1 == nil && emailRegxp.MatchString(email) && len(password) < 20
-        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 20
+        isValidEmail := email == data.Email || (u1 == nil && emailRegxp.MatchString(email) && len(password) < 20)
+        isValidName := name == data.Name || (u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 20)
         isValidPassword := password == "" || password == passwordConfirmation
+        fmt.Println(isValidName, isValidEmail, u2 == nil , !strings.Contains(name, "@") , !strings.Contains(name, " ") , len(name) < 20)
+        
         if (!isValidEmail || !isValidName || !isValidPassword) {
             http.Redirect(w, r, "/Update_Profile", http.StatusSeeOther)       
             return
@@ -508,6 +523,7 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleNewPost(w http.ResponseWriter, r *http.Request) {
+
     if r.URL.Path != "/New_Post" {
         Cruds.ShowError(w, "404 not found", http.StatusNotFound)
         return
@@ -519,6 +535,13 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
     }
 
     if r.Method == http.MethodPost {
+        
+        
+        // if err != nil {
+        //     Cruds.ShowError(w, "500 - Internal server error", http.StatusInternalServerError)
+        //     return
+        // }
+
         data := Cruds.GetUser(userID)
         title := r.FormValue("title")
         categories := strings.Split(r.FormValue("categories"), " ")
@@ -537,6 +560,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             http.Error(w, "err formFile",http.StatusBadRequest)
             return
         }
+        
         if file != nil {
             defer file.Close()
             copyFile, err := os.Create("../Uploads/" + fileHeader.Filename)
@@ -674,11 +698,26 @@ func HandleIdentifierDisponibility(w http.ResponseWriter, r *http.Request) {
         "isDisponible": isDisponible,
     })
 }
+func FillFormValues(w http.ResponseWriter, r *http.Request) (map[string]string, error) {
+    buffer := make([]byte, r.ContentLength)
+    _, err := r.Body.Read(buffer)
+    if err != io.EOF {
+        return nil, err
+    }
+
+    var data = make(map[string]string)
+    err = json.Unmarshal(buffer, &data)
+    if err != nil {
+        return nil, err
+    }
+
+    return data, nil
+}
+
 
 func HandleIsValidCredentials(w http.ResponseWriter, r *http.Request) {
     buffer := make([]byte, r.ContentLength)
     nb, err := r.Body.Read(buffer)
-    fmt.Println(nb, err, string(buffer))
     if nb == 0 || err != io.EOF {
         w.Header().Set("Content-Type", "application/json")
         json.NewEncoder(w).Encode(map[string]bool{
@@ -696,20 +735,11 @@ func HandleIsValidCredentials(w http.ResponseWriter, r *http.Request) {
         })
         return
     }
-    fmt.Println("data :", data)
-    isValid := Cruds.CheckUserInfo(data["email"],data["password"])
+    isValid := Cruds.CheckUserInfo(data["email"], data["password"])
 
-    fmt.Println(isValid)
     
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]bool{
         "isValid": isValid,
     })
-
-    // user := Cruds.GetUser(email)
-    // isValid := user == nil
-    // w.Header().Set("Content-Type", "application/json")
-    // json.NewEncoder(w).Encode(map[string]bool{
-    //     "isValid": isValid,
-    // })
 }

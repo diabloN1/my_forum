@@ -175,6 +175,7 @@ func InsertComment(postId, userId, content string) {
 		log.Printf("error exec query: %v", err)
 		return
 	}
+	log.Println("comment added succesfully")
 }
 
 func GetCategories() ([]GlobVar.Categories, error) {

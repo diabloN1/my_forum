@@ -1,16 +1,7 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Load navbar
-  fetch("/static/components/navbar.html")
-    .then((response) => response.text())
-    .then((html) => {
-      document.getElementById("navbar-placeholder").innerHTML = html;
-      initializeNavbar();
-    });
+// Theme management
+const theme = localStorage.getItem("theme") || "dark";
+document.documentElement.setAttribute("data-theme", theme);
 
-  // Theme management
-  const theme = localStorage.getItem("theme") || "dark";
-  document.documentElement.setAttribute("data-theme", theme);
-});
 
 function initializeNavbar() {
   const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
@@ -65,6 +56,7 @@ function updateAuthVisibility(isAuthenticated) {
       element.style.display = "none";
     });
   }
+  document.getElementById("navbar").style.display = ''
 }
 
 async function checkAuthStatus() {
@@ -80,3 +72,10 @@ async function checkAuthStatus() {
     return false;
   }
 }
+// Load navbar
+fetch("/static/components/navbar.html")
+  .then((response) => response.text())
+  .then((html) => {
+    document.getElementById("navbar-placeholder").innerHTML = html;
+    initializeNavbar();
+});

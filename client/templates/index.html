@@ -44,9 +44,15 @@
           <label for="creationDateFilter">Creation date</label
           ><span id="creationMin" style="color: rgb(0, 255, 0)"></span> |
           <span id="creationMax" style="color: rgb(0, 255, 0)"></span>
+          <label for="creationDateFilter">Creation date</label
+          ><span id="creationMin" style="color: rgb(0, 255, 0)"></span> |
+          <span id="creationMax" style="color: rgb(0, 255, 0)"></span>
           <div id="creationDateFilter"></div>
         </div>
         <div class="filter-section">
+          <label for="likesFilter">Most rated</label
+          ><span id="rateMin" style="color: rgb(0, 255, 0)"></span> |
+          <span id="rateMax" style="color: rgb(0, 255, 0)"></span>
           <label for="likesFilter">Most rated</label
           ><span id="rateMin" style="color: rgb(0, 255, 0)"></span> |
           <span id="rateMax" style="color: rgb(0, 255, 0)"></span>
@@ -56,11 +62,9 @@
 
       <div class="posts-grid" id="postsContainer">
         {{range .}}
-        <div
-          class="post-card"
-          onclick="window.location.href='/post/?id={{.ID}}';"
-          style="cursor: pointer"
-        >
+        <div class="post-card" style="cursor: pointer" card-id="{{.ID}}">
+          <!-- onclick="window.location.href='/post/?id={{.ID}}';" -->
+
           {{if .Image}}
           <div class="post-image-container">
             <img src="{{.Image}}" alt="Post image" class="post-image" />
@@ -77,7 +81,7 @@
                 <span>{{.Categories}}</span>
               </div>
             </div>
-            <div class="post-actions">
+            <!-- <div class="post-actions">
               <form action="/IsLike" method="post" class="action-form">
                 <input type="hidden" name="postId" value="{{.ID}}" />
                 <input type="hidden" name="userId" value="{{.UserId}}" />
@@ -105,7 +109,7 @@
               <button class="action-btn comment-btn" data-post-id="{{.ID}}">
                 💬 <span class="comment-count">{{.NbrComment}}</span>
               </button>
-            </div>
+            </div> -->
           </div>
         </div>
         {{end}}
@@ -116,6 +120,7 @@
       </div>
       {{end}}
     </main>
+    <script type="module" src="../static/utils/liveParser.js"></script>
     <script type="application/json" id="postsData">
       {{.}}
     </script>
