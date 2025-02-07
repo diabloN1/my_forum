@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+type contextKey string
+
+const userIDKey contextKey = "userID"
 
 func ValidateSession(next http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +31,7 @@ func ValidateSession(next http.HandlerFunc) http.HandlerFunc {
         
         // Add the user ID to the request context
      
-        ctx := context.WithValue(r.Context(), "userID", userID)
+        ctx := context.WithValue(r.Context(), userIDKey, userID)
         next(w, r.WithContext(ctx))
     }
 }
