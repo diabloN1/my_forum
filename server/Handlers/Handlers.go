@@ -3,6 +3,7 @@ package Handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -15,6 +16,7 @@ import (
 
 	Cruds "forum/Api"
 	"forum/GlobVar"
+	"forum/Utils"
 	cookies "forum/cookies"
 )
 
@@ -146,7 +148,12 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 		// Extracting values from the form
 		postId := FormValues["postId"]
 		commentId := FormValues["commentId"]
-		userId := r.Context().Value("userID").(string)
+
+        userId := Utils.GetCurrentUserId(r)
+        if userId == "" {
+            Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
+            return
+        }
 
 		isLike := FormValues["isLike"] == "true"
         isForComment := FormValues["isComment"] == "true"
@@ -188,9 +195,8 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/post/?id=" + postToRedirect, http.StatusSeeOther)
             return
 		}
-	} else {
-        Cruds.ShowError(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
-    }
+	}
+    Cruds.ShowError(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 
@@ -345,13 +351,13 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 
     // Retrieve the user ID from the cookie
     cookie, _ := r.Cookie("Session_ID")
-
     userID := ""
     if cookie != nil {
         // Validate the session ID and get the user ID
         sessionID := cookie.Value
         userID, _ = Cruds.ValidateSessionIDAndGetUserID(sessionID)
     }
+
 	if len(posts) > 0 {
 		for i := range posts {
 			//user
@@ -410,14 +416,14 @@ func HandleProfileAccount(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Retrieve the user ID from the context
-    userID, ok := r.Context().Value("userID").(string)
-    if !ok {
+    // Retrieve the user ID 
+    userID := Utils.GetCurrentUserId(r)
+    if userID == "" {
         Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
 
-    // Query the user using the user ID from the context
+    // Query the user using the user ID 
     data := Cruds.GetUser(userID)
     
 
@@ -444,9 +450,9 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Retrieve the user ID from the context
-    userID, ok := r.Context().Value("userID").(string)
-    if !ok {
+    // Retrieve the user ID 
+    userID := Utils.GetCurrentUserId(r)
+    if userID == "" {
         Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
@@ -482,13 +488,13 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
             
             _, err = file.Read(hold)
             if err != nil {
-                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err copy file to newFile", http.StatusInternalServerError)
                 return
             }
 
             _,err = copyFile.Write(hold)
             if err != nil {
-                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err copy file to newFile", http.StatusInternalServerError)
                 return
             }
             imagePath = "/Uploads/" + fileHeader.Filename
@@ -547,8 +553,11 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         Cruds.ShowError(w, "404 not found", http.StatusNotFound)
         return
     }
-	userID, ok := r.Context().Value("userID").(string)
-    if !ok {
+
+    
+    // Retrieve the user ID 
+    userID := Utils.GetCurrentUserId(r)
+    if userID == "" {
         Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
@@ -556,11 +565,19 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
     if r.Method == http.MethodPost {
         
         data := Cruds.GetUser(userID)
-        title := r.FormValue("title")
+        title := r.FormValue("title") 
         categories := strings.Split(r.FormValue("categories"), " ")
         content := r.FormValue("content")
+        fmt.Println("categories :", categories)
 
-        // Check the categories validation 
+        // Checking the title and Categories Validation 
+        titleRegxp := regexp.MustCompile(`^.{1,50}$`)
+        if !titleRegxp.MatchString(title) || (len(categories) <= 1 && categories[0] == "" ) {
+            http.Redirect(w, r, "/New_Post", http.StatusMovedPermanently)
+            return
+        }
+
+        // Check each category validation 
         catRegex := regexp.MustCompile(`^[a-zA-Z-_]{1,30}$`)
         for _, category := range categories {
             if !(catRegex.MatchString(strings.Trim(category, "#"))) {
@@ -579,7 +596,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         
         file, fileHeader, err := r.FormFile("post_image")
         if err != nil && err != http.ErrMissingFile {
-            http.Error(w, "err formFile",http.StatusBadRequest)
+            Cruds.ShowError(w, "err formFile",http.StatusBadRequest)
             return
         }
         
@@ -587,7 +604,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             defer file.Close()
             copyFile, err := os.Create("../Uploads/" + fileHeader.Filename)
             if err != nil {
-                http.Error(w, "err open file", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err open file", http.StatusInternalServerError)
                 return
             }
             defer copyFile.Close()
@@ -595,7 +612,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             file.Read(hold)
             _,err = copyFile.Write(hold)
             if err != nil {
-                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err copy file to newFile", http.StatusInternalServerError)
                 return
             }
             image = "/Uploads/"+fileHeader.Filename
@@ -603,7 +620,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         
 
 
-        isValidInputs := title != "" && len(categories) != 0 && content != "" && len(title) < 50 && len(categories) < 10 && len(content) < 1200
+        isValidInputs := content != "" && len(categories) < 10 && len(content) < 1200
         if isValidInputs && Cruds.InsertPost(data.ID, image, title, content, categories) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return

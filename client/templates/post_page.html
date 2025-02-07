@@ -137,5 +137,10 @@
     <script src="../static/utils/theme.js"></script>
     <script type="module" src="../static/utils/liveParser.js"></script>
     <script src="../static/utils/full-screen-iamge.js"></script>
+    <script>
+      document.querySelectorAll(".category-tag").forEach((el) => {
+        el.textContent = el.textContent.slice(1);
+      });
+    </script>
   </body>
 </html>

@@ -1,19 +1,22 @@
 diablo :
+
 - Edit Profile (typing password invalid than valid confirmation)
-- using the user's email and username
+- Is Allowed Route
+- Maxlength js
 
 anass :
 
 hamza :
+
 - Dockerfile.
 - script to run the project. https://github.com/diabloN1/ascii-art-web-anasV/blob/master/run.bash.
 - backend testing.
 
 mellaghi :
+
 - html placeHolders.
 
 yassin :
+
 - backend testing.
 - auth bonus (after validating forum).
-
-

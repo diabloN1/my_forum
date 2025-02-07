@@ -1,14 +1,10 @@
 package middleware
 
 import (
-	"context"
 	Cruds "forum/Api"
 	"net/http"
 )
 
-type contextKey string
-
-const userIDKey contextKey = "userID"
 
 func ValidateSession(next http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -22,16 +18,13 @@ func ValidateSession(next http.HandlerFunc) http.HandlerFunc {
 
         // Validate the session ID and get the user ID
         sessionID := cookie.Value
-        userID, valid := Cruds.ValidateSessionIDAndGetUserID(sessionID)
+        _, valid := Cruds.ValidateSessionIDAndGetUserID(sessionID)
         if !valid {
             // Invalid session, redirect to sign-in page
             http.Redirect(w, r, "/Sign_In", http.StatusSeeOther)
             return
         }
         
-        // Add the user ID to the request context
-     
-        ctx := context.WithValue(r.Context(), userIDKey, userID)
-        next(w, r.WithContext(ctx))
+        next(w, r)
     }
 }
