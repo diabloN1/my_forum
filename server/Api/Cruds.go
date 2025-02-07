@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -31,6 +32,13 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func reverseSlice(slice []GlobVar.Post) {
+	n := len(slice)
+	for i := 0; i < n/2; i++ {
+		slice[i], slice[n-1-i] = slice[n-1-i], slice[i]
+	}
 }
 
 func CheckUserInfo(email, password string) bool {
@@ -460,6 +468,7 @@ func GetAllPosts() ([]GlobVar.Post, error) {
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+	reverseSlice(posts)
 	return posts, nil
 }
 
@@ -626,9 +635,11 @@ func ShowError(w http.ResponseWriter, message string, status int) {
     }
     // Execute the template with the error message
     err = tmpl.Execute(w, httpError)
-    if err != nil {
-        // If template execution fails, send a fallback error response with plain text
-        w.WriteHeader(http.StatusInternalServerError)
-        w.Write([]byte("Internal Server Error: Could not render error page"))
+	if err != nil {
+        log.Println("Template execution error:", err)
+        if w.Header().Get("Content-Type") == "" && !strings.Contains(err.Error(), "broken pipe") { 
+            // Ensure no data has been written before calling WriteHeader
+            http.Error(w, "Internal Server Error: Could not render error page", http.StatusInternalServerError)
+        }
     }
 }

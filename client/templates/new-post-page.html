@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Post - Forum</title>
-    <link rel="icon" href="../static/public/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="icon" href="/static/public/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="/static/styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
@@ -74,7 +74,7 @@
       </div>
     </div>
 
-    <script src="../static/utils/theme.js"></script>
+    <script src="/static/utils/theme.js"></script>
     <script type="module">
       let selectedCategories = new Set();
 
@@ -86,7 +86,7 @@
             if (event.target.value) {
               selectedCategories.add(event.target.value);
               updateSelectedCategories();
-              event.target.value = ""; 
+              event.target.value = "";
             }
           });
       }
@@ -107,11 +107,23 @@
         document.getElementById("selectedCatDiv").innerHTML = [
           ...selectedCategories,
         ]
-          .map((cat) => `<span class="category-tag">${cat}</span>`)
+          .map(
+            (cat) =>
+              `<span class="category-tag">${cat}<button type="button" class="remove-category" data-category="${cat}">×</button></span>`
+          )
           .join("");
         document.getElementById("postCategories").value = [
           ...selectedCategories,
         ].join(" ");
+
+        // Keep your existing click handler code
+        document.querySelectorAll(".remove-category").forEach((button) => {
+          button.addEventListener("click", (e) => {
+            const categoryToRemove = e.target.dataset.category;
+            selectedCategories.delete(categoryToRemove);
+            updateSelectedCategories();
+          });
+        });
       }
 
       // Enable/disable add button based on input
@@ -146,7 +158,12 @@
     <script type="module">
       const category = document.getElementById("category");
       const title = document.getElementById("title");
-      const catRegex = /^[a-zA-Z0-9-_]{1,50}$/;
+
+      // Regex for category
+      const catRegex = /^[a-zA-Z-_]{1,30}$/;
+
+      // Regex for title
+      const titleRegex = /^.{1,50}$/;
 
       const catError = document.getElementById("customCatError");
       const titleError = document.getElementById("customTitleError");
@@ -159,20 +176,22 @@
           catError.innerText = "";
           addButton.disabled = false;
         } else {
-          catError.innerText = "Invalid category";
+          catError.innerText =
+            "Invalid category (No spaces allowed, No numbers allowed, max 50 chars)";
           addButton.disabled = true;
         }
       });
 
       title.addEventListener("input", (event) => {
-        if (catRegex.test(event.target.value)) {
+        if (titleRegex.test(event.target.value)) {
           titleError.innerText = "";
           submitButton.disabled = false;
         } else {
-          titleError.innerText = "Invalid title";
+          titleError.innerText = "Invalid title (Max 50 chars)";
           submitButton.disabled = true;
         }
       });
     </script>
+    <script src="/static/utils/maxLengh.js" type="module"></script>
   </body>
 </html>

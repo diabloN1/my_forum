@@ -65,7 +65,7 @@ forms.forEach(form => form.addEventListener('submit', async (event) => {
         const scripts = document.querySelectorAll('script');
         scripts.forEach((script) => {
           {script.textContent ? eval(script.textContent): null}
-          {script.src && script.src != "http://localhost:8080/static/utils/theme.js" && script.src != "../static/utils/theme.js"  ? ExecuteExternalJs(script.src): null} 
+          {script.src ? ExecuteExternalJs(script.src): null} 
         });
         document.getElementById('navbar-placeholder').innerHTML = nav
         }
@@ -103,8 +103,7 @@ posts.forEach((post) => post.addEventListener('click', async () => {
   const scripts = document.querySelectorAll('script');
   scripts.forEach((script) => {
       {script.textContent ? eval(script.textContent): null}
-      console.log(script.src)
-      {script.src && script.src != "http://localhost:8080/static/utils/theme.js" && script.src != "../static/utils/theme.js"  ? ExecuteExternalJs(script.src): null} 
+      {script.src ? ExecuteExternalJs(script.src): null} 
   });
   document.getElementById('navbar-placeholder').innerHTML = nav
 }

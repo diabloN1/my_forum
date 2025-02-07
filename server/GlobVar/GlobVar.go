@@ -76,5 +76,5 @@ var (
 const (
 	TemplatesPath = "../../client/templates/"
 	StaticPath    = "../../client/static/"
-	DefaultImage  = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+	DefaultImage  = "/static/public/no_image.png"
 )

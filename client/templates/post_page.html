@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ForumBook - {{.Post.Title}}</title>
-    <link rel="icon" href="../static/public/favicon.png" type="image/png" />
+    <link rel="icon" href="/static/public/favicon.png" type="image/png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
@@ -131,14 +131,17 @@
       </div>
     </div>
     <div id="fullscreen-image" class="fullscreen-image">
-      <img
-        alt="Full size image"
-        class="fullscreen-image-content"
-      />
+      <img alt="Full size image" class="fullscreen-image-content" />
       <button class="close-fullscreen-btn">&times;</button>
     </div>
-    <script src="../static/utils/theme.js"></script>
-    <script type="module" src="../static/utils/liveParser.js"></script>
-    <script src="../static/utils/full-screen-iamge.js"></script>
+    <script src="/static/utils/theme.js"></script>
+    <script type="module" src="/static/utils/liveParser.js"></script>
+    <script src="/static/utils/full-screen-iamge.js"></script>
+    <script>
+      document.querySelectorAll(".category-tag").forEach((el) => {
+        el.textContent = el.textContent.slice(1);
+      });
+    </script>
+    <script src="/static/utils/maxLengh.js" type="module"></script>
   </body>
 </html>

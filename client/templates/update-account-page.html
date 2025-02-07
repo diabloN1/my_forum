@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit Profile - Forum</title>
-    <link rel="icon" href="../static/public/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="icon" href="/static/public/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="/static/styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
@@ -72,7 +72,7 @@
       </div>
     </div>
 
-    <script src="../static/utils/theme.js"></script>
+    <script src="/static/utils/theme.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const avatarInput = document.getElementById("avatar");
@@ -194,13 +194,11 @@
 
       submitButtom.addEventListener('click', (event) => {
         event.preventDefault()
-        console.log(1111111111111)
-        if (!usernameError.value && !emailError.value && !passwordError.value) {
-          console.log(username)
-          
+        if (!usernameError.innerText && !emailError.innerText && !passwordError.innerText && !passwordConfirmationError.innerText) {
           form.submit()
         }
       })
     </script>
+    <script src="/static/utils/maxLengh.js" type="module"></script>
   </body>
 </html>

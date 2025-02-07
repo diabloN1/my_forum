@@ -16,17 +16,23 @@ import (
 
 	Cruds "forum/Api"
 	"forum/GlobVar"
+	"forum/Utils"
 	cookies "forum/cookies"
 )
 
 func HandleStatic(w http.ResponseWriter, r *http.Request) {
-    if r.URL.Path == "/" {
+    if !allowedRouteMiddleware(r.URL.Path) {
         Cruds.ShowError(w, "404- Not Found", 404)
         return
     }
 
     fs := http.FileServer(http.Dir(GlobVar.StaticPath))
 	fs.ServeHTTP(w, r)
+}
+
+func allowedRouteMiddleware(path string) bool {
+    _, err := os.ReadFile("../../client/static"+path)
+    return err == nil
 }
 
 func HandleUploads() {
@@ -72,6 +78,7 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
     likes, dislikes, err := Cruds.GetLikesDislikesByPost(postID, false)
     if err != nil {
         Cruds.ShowError(w, "Failed to fetch likes/dislikes", http.StatusInternalServerError)
+        return
     }
 
     // Prepare the data to be passed to the template
@@ -106,6 +113,7 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
     FormValues, err := FillFormValues(w, r)
     if err != nil {
         Cruds.ShowError(w, "Error parsing formValues", http.StatusInternalServerError)
+        return
     }
 	if r.URL.Path != "/Comment" {
 		Cruds.ShowError(w, "404", http.StatusNotFound)
@@ -118,7 +126,10 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
 
     comment := FormValues["content"]
     postId := FormValues["postId"]
-    userId := FormValues["userId"]
+    userId := Utils.GetCurrentUserId(r)
+
+    fmt.Println(len([]rune(comment)), postId, userId)
+
     if strings.TrimSpace(comment) == "" || len(comment) > 2000 {
         http.Redirect(w, r, "/post/?id="+postId, http.StatusSeeOther)
         return 
@@ -145,14 +156,18 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 		// Extracting values from the form
 		postId := FormValues["postId"]
 		commentId := FormValues["commentId"]
-		userId := r.Context().Value("userID").(string)
+
+        userId := Utils.GetCurrentUserId(r)
+        if userId == "" {
+            Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
+            return
+        }
 
 		isLike := FormValues["isLike"] == "true"
         isForComment := FormValues["isComment"] == "true"
         postToRedirect := postId
 
 
-        fmt.Println(userId)
         if isForComment {
             postId = commentId
         }
@@ -183,14 +198,13 @@ func HandleLikeDislike(w http.ResponseWriter, r *http.Request) {
 		referer := r.Referer()
 		if referer == "http://localhost:8080/" {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
+            return
 		} else {
 			http.Redirect(w, r, "/post/?id=" + postToRedirect, http.StatusSeeOther)
+            return
 		}
-		return
 	}
-
-	// Handle unsupported methods
-	Cruds.ShowError(w, "404 - Page Not Found", http.StatusNotFound)
+    Cruds.ShowError(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 
@@ -200,6 +214,7 @@ func HandleLogOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	if r.Method == http.MethodPost {
 		// Delete the session cookie and session from the database
 		Delete_Cookie_Handler(w, r)
@@ -207,9 +222,10 @@ func HandleLogOut(w http.ResponseWriter, r *http.Request) {
 		// Redirect to home page
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
-	}
-
-	Cruds.ShowError(w, "404 - Page Not Found", http.StatusNotFound)
+	} else {
+        Cruds.ShowError(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
+        return
+    }
 }
 
 func HandleSignIn(w http.ResponseWriter, r *http.Request) {
@@ -282,8 +298,9 @@ func HandleSignUp(w http.ResponseWriter, r *http.Request) {
         u2 := Cruds.GetUser(name)
 
         emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+        usernameRegex := regexp.MustCompile(`^[a-z0-9_]{1,20}$`)
         isValidEmail := u1 == nil && emailRegxp.MatchString(email) && email != "" && len(password) < 20
-        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && name != "" && len(name) < 20
+        isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && name != "" && len(name) < 20 && usernameRegex.MatchString(name)
         isValidPassword := len(password) < 8 || password != passwordConfirmation || len(password) > 20 || len(passwordConfirmation) > 20
         if !isValidName || !isValidEmail || isValidPassword {
             http.Redirect(w, r, "/Sign_Up", http.StatusSeeOther)       
@@ -300,7 +317,6 @@ func HandleSignUp(w http.ResponseWriter, r *http.Request) {
         // Set the session cookie for the new user
         Set_Cookies_Handler(w, r, userID)
         http.Redirect(w, r, "/", http.StatusSeeOther)
-		 
         return
     }
 
@@ -343,14 +359,13 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 
     // Retrieve the user ID from the cookie
     cookie, _ := r.Cookie("Session_ID")
-
     userID := ""
     if cookie != nil {
         // Validate the session ID and get the user ID
         sessionID := cookie.Value
         userID, _ = Cruds.ValidateSessionIDAndGetUserID(sessionID)
     }
-    fmt.Println(userID)
+
 	if len(posts) > 0 {
 		for i := range posts {
 			//user
@@ -409,14 +424,14 @@ func HandleProfileAccount(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Retrieve the user ID from the context
-    userID, ok := r.Context().Value("userID").(string)
-    if !ok {
+    // Retrieve the user ID 
+    userID := Utils.GetCurrentUserId(r)
+    if userID == "" {
         Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
 
-    // Query the user using the user ID from the context
+    // Query the user using the user ID 
     data := Cruds.GetUser(userID)
     
 
@@ -443,9 +458,9 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Retrieve the user ID from the context
-    userID, ok := r.Context().Value("userID").(string)
-    if !ok {
+    // Retrieve the user ID 
+    userID := Utils.GetCurrentUserId(r)
+    if userID == "" {
         Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
@@ -481,13 +496,13 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
             
             _, err = file.Read(hold)
             if err != nil {
-                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err copy file to newFile", http.StatusInternalServerError)
                 return
             }
 
             _,err = copyFile.Write(hold)
             if err != nil {
-                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err copy file to newFile", http.StatusInternalServerError)
                 return
             }
             imagePath = "/Uploads/" + fileHeader.Filename
@@ -520,7 +535,7 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		// Update user in the database
 		err = Cruds.UpdateUser(email, name, imagePath, password, userID)
         if err != nil {
-            Cruds.ShowError(w, "500", 500)
+            Cruds.ShowError(w, "Failed to Update Your profile please try again ...", 500)
         }
 		http.Redirect(w, r, "/Profile_Account", http.StatusSeeOther)
 		return		
@@ -546,24 +561,38 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         Cruds.ShowError(w, "404 not found", http.StatusNotFound)
         return
     }
-	userID, ok := r.Context().Value("userID").(string)
-    if !ok {
+
+    
+    // Retrieve the user ID 
+    userID := Utils.GetCurrentUserId(r)
+    if userID == "" {
         Cruds.ShowError(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
 
     if r.Method == http.MethodPost {
         
-        
-        // if err != nil {
-        //     Cruds.ShowError(w, "500 - Internal server error", http.StatusInternalServerError)
-        //     return
-        // }
-
         data := Cruds.GetUser(userID)
-        title := r.FormValue("title")
+        title := r.FormValue("title") 
         categories := strings.Split(r.FormValue("categories"), " ")
         content := r.FormValue("content")
+        fmt.Println("categories :", categories)
+
+        // Checking the title and Categories Validation 
+        titleRegxp := regexp.MustCompile(`^.{1,50}$`)
+        if !titleRegxp.MatchString(title) || (len(categories) <= 1 && categories[0] == "" ) {
+            http.Redirect(w, r, "/New_Post", http.StatusMovedPermanently)
+            return
+        }
+
+        // Check each category validation 
+        catRegex := regexp.MustCompile(`^[a-zA-Z-_]{1,30}$`)
+        for _, category := range categories {
+            if !(catRegex.MatchString(strings.Trim(category, "#"))) {
+                http.Redirect(w, r, "/New_Post", http.StatusBadRequest)
+                return
+            }
+        } 
 
         // [start] upload image
         image := GlobVar.DefaultImage
@@ -575,7 +604,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         
         file, fileHeader, err := r.FormFile("post_image")
         if err != nil && err != http.ErrMissingFile {
-            http.Error(w, "err formFile",http.StatusBadRequest)
+            Cruds.ShowError(w, "err formFile",http.StatusBadRequest)
             return
         }
         
@@ -583,7 +612,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             defer file.Close()
             copyFile, err := os.Create("../Uploads/" + fileHeader.Filename)
             if err != nil {
-                http.Error(w, "err open file", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err open file", http.StatusInternalServerError)
                 return
             }
             defer copyFile.Close()
@@ -591,7 +620,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             file.Read(hold)
             _,err = copyFile.Write(hold)
             if err != nil {
-                http.Error(w, "err copy file to newFile", http.StatusInternalServerError)
+                Cruds.ShowError(w, "err copy file to newFile", http.StatusInternalServerError)
                 return
             }
             image = "/Uploads/"+fileHeader.Filename
@@ -599,7 +628,7 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         
 
 
-        isValidInputs := title != "" && len(categories) != 0 && content != "" && len(title) < 50 && len(categories) < 10 && len(content) < 1200
+        isValidInputs := content != "" && len(categories) < 10 && len(content) < 1200
         if isValidInputs && Cruds.InsertPost(data.ID, image, title, content, categories) {
             http.Redirect(w, r, "/", http.StatusSeeOther)
             return

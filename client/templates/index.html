@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ForumBook</title>
-    <link rel="icon" href="../static/public/favicon.png" type="image/png" />
+    <link rel="icon" href="/static/public/favicon.png" type="image/png" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.css"
@@ -14,7 +14,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.js"></script>
-    <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="stylesheet" href="/static/styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
@@ -31,10 +31,15 @@
       </div>
       <button id="filterButton"><i class="fa fa-filter"></i> Filters</button>
 
-
       <div id="filterContainer" style="display: none">
-        <button id="likeFilterButton">👍</button>
-        <button id="meFilterButton">@me</button>
+        <div class="filter-actions">
+          <button id="likeFilterButton" class="filter-action-btn">
+            <i class="fa fa-thumbs-up"></i>Liked
+          </button>
+          <button id="meFilterButton" class="filter-action-btn">
+            <i class="fa fa-user"></i>My Posts
+          </button>
+        </div>
         <input
           type="text"
           id="searchInput"
@@ -59,7 +64,6 @@
       <div class="posts-grid" id="postsContainer">
         {{range .}}
         <div class="post-card" style="cursor: pointer" card-id="{{.ID}}">
-
           {{if .Image}}
           <div class="post-image-container">
             <img src="{{.Image}}" alt="Post image" class="post-image" />
@@ -73,38 +77,13 @@
                 <span>Posted by {{.UserName}}</span>
               </div>
               <div class="post-categories">
-                <span>{{.Categories}}</span>
+                {{range $index, $category := .Categories}} {{if lt $index 3}}
+                <span class="category-tag">{{$category}}</span>
+                {{end}} {{if eq $index 3}}
+                <span class="category-tag">...</span>
+                {{end}} {{end}}
               </div>
             </div>
-            <!-- <div class="post-actions">
-              <form action="/IsLike" method="post" class="action-form">
-                <input type="hidden" name="postId" value="{{.ID}}" />
-                <input type="hidden" name="userId" value="{{.UserId}}" />
-                <input type="hidden" name="isLike" value="true" />
-                <button
-                  type="submit"
-                  class="action-btn like-btn"
-                  data-post-id="{{.ID}}"
-                >
-                  👍 <span class="like-count">{{.NbrLike}}</span>
-                </button>
-              </form>
-              <form action="/IsLike" method="post" class="action-form">
-                <input type="hidden" name="postId" value="{{.ID}}" />
-                <input type="hidden" name="userId" value="{{.UserId}}" />
-                <input type="hidden" name="isLike" value="false" />
-                <button
-                  type="submit"
-                  class="action-btn dislike-btn"
-                  data-post-id="{{.ID}}"
-                >
-                  👎 <span class="dislike-count">{{.NbrDislike}}</span>
-                </button>
-              </form>
-              <button class="action-btn comment-btn" data-post-id="{{.ID}}">
-                💬 <span class="comment-count">{{.NbrComment}}</span>
-              </button>
-            </div> -->
           </div>
         </div>
         {{end}}
@@ -115,11 +94,11 @@
       </div>
       {{end}}
     </main>
-    <script type="module" src="../static/utils/liveParser.js"></script>
+    <script type="module" src="/static/utils/liveParser.js"></script>
     <script type="application/json" id="postsData">
       {{.}}
     </script>
-    <script src="../static/utils/theme.js"></script>
-    <script type="module" src="../static/utils/filtersHome.js"></script>
+    <script src="/static/utils/theme.js"></script>
+    <script type="module" src="/static/utils/filtersHome.js"></script>
   </body>
 </html>
