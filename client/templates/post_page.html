@@ -92,8 +92,10 @@
                     type="submit"
                     class="action-btn like-btn"
                     data-post-id="{{.ID}}"
+                    id="like-button"
                   >
-                    👍 <span class="like-count">{{.CommentLikes}}</span>
+                    👍
+                    <span class="like-count">{{.CommentLikes}}</span>
                   </button>
                 </form>
 
@@ -137,10 +139,44 @@
     <script src="../static/utils/theme.js"></script>
     <script type="module" src="../static/utils/liveParser.js"></script>
     <script src="../static/utils/full-screen-iamge.js"></script>
+    <script type="application/json" id="isLiked">
+      {{.}}
+    </script>
     <script>
+      function toggleButtonStyle(button, isActive) {
+        if (button) {
+          if (isActive) {
+            button.classList.add("active");
+          } else {
+            button.classList.remove("active");
+          }
+        }
+      }
+
       document.querySelectorAll(".category-tag").forEach((el) => {
         el.textContent = el.textContent.slice(1);
       });
+
+      const dataElement = document.getElementById("isLiked");
+      let data = null;
+
+      try {
+        data = JSON.parse(dataElement.textContent);
+      } catch (error) {
+        console.error("FAILED TO PARS JSON DATA", error);
+      }
+
+      console.log("DATA:", data);
+
+      if (data && typeof data.Post.is_user_liked !== "undefined") {
+        toggleButtonStyle(
+          document.getElementById("like-button"),
+          data.Post.is_user_liked
+        );
+        console.log(data.Post.is_user_liked);
+      } else {
+        console.error("Invalid data structure:", data.Post.is_user_liked);
+      }
     </script>
   </body>
 </html>

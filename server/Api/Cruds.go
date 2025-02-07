@@ -1,6 +1,7 @@
 package Cruds
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
@@ -616,27 +617,28 @@ type Error struct {
 
 // Function to render error pages with an HTTP status code
 func ShowError(w http.ResponseWriter, message string, status int) {
-
     // Parse the error template
     tmpl, err := template.ParseFiles(filepath.Join(GlobVar.TemplatesPath, "ErrPage.html"))
     if err != nil {
-        // If template parsing fails, fallback to a generic error response
-        ShowError(w, "Could not load error page", http.StatusInternalServerError)
+        http.Error(w, "Could not load error page", http.StatusInternalServerError)
         return
     }
 
-	// Set the HTTP status code
-    w.WriteHeader(status)
-	
     httpError := Error{
-        Status: status,
+        Status:  status,
         Message: message,
     }
-    // Execute the template with the error message
-    err = tmpl.Execute(w, httpError)
+
+    // Use a buffer to prevent partial writes in case of an error
+    var buf bytes.Buffer
+    err = tmpl.Execute(&buf, httpError)
     if err != nil {
-        // If template execution fails, send a fallback error response with plain text
-        w.WriteHeader(http.StatusInternalServerError)
-        w.Write([]byte("Internal Server Error: Could not render error page"))
+        http.Error(w, "Internal Server Error: Could not render error page", http.StatusInternalServerError)
+        return
     }
+
+    // Write status and body only after ensuring template execution succeeded
+    w.WriteHeader(status)
+    _, _ = w.Write(buf.Bytes())
 }
+

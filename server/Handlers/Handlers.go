@@ -3,7 +3,6 @@ package Handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -62,6 +61,8 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    
+
     // Fetch comments for the post
     postComments, err := Cruds.GetPostComments(postID)
     if err != nil {
@@ -75,6 +76,14 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
         Cruds.ShowError(w, "Failed to fetch likes/dislikes", http.StatusInternalServerError)
         return
     }
+    userID := Utils.GetCurrentUserId(r)
+
+    post.IsUserLiked, err = Cruds.IsLikedByUser(userID, postID, false)
+    if err != nil && err != sql.ErrNoRows {
+        Cruds.ShowError(w, "There was an error fetching posts", http.StatusInternalServerError)       
+        return         
+    }
+
 
     // Prepare the data to be passed to the template
     data := struct {
@@ -517,7 +526,7 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
         emailRegxp := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
         isValidEmail := email == data.Email || (u1 == nil && emailRegxp.MatchString(email) && len(password) < 20)
         isValidName := name == data.Name || (u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && len(name) < 20)
-        isValidPassword := password == "" || password == passwordConfirmation
+        isValidPassword := password == "" || ( len(password) >= 8 && len(password) <= 20 && password == passwordConfirmation) 
         
         if (!isValidEmail || !isValidName || !isValidPassword) {
             http.Redirect(w, r, "/Update_Profile", http.StatusSeeOther)       
@@ -568,11 +577,16 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         title := r.FormValue("title") 
         categories := strings.Split(r.FormValue("categories"), " ")
         content := r.FormValue("content")
-        fmt.Println("categories :", categories)
+    
 
         // Checking the title and Categories Validation 
         titleRegxp := regexp.MustCompile(`^.{1,50}$`)
-        if !titleRegxp.MatchString(title) || (len(categories) <= 1 && categories[0] == "" ) {
+        if !titleRegxp.MatchString(title) {
+            http.Redirect(w, r, "/New_Post", http.StatusMovedPermanently)
+            return
+        }
+
+        if !titleRegxp.MatchString(title) {
             http.Redirect(w, r, "/New_Post", http.StatusMovedPermanently)
             return
         }
@@ -580,11 +594,15 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
         // Check each category validation 
         catRegex := regexp.MustCompile(`^[a-zA-Z-_]{1,30}$`)
         for _, category := range categories {
-            if !(catRegex.MatchString(strings.Trim(category, "#"))) {
-                http.Redirect(w, r, "/New_Post", http.StatusBadRequest)
+            if strings.TrimSpace(category) != "" && !(catRegex.MatchString(strings.Trim(category, "#"))) {
+                 http.Redirect(w, r, "/New_Post", http.StatusMovedPermanently)
+                 return
+            } else if !(catRegex.MatchString(strings.Trim(category, "#"))) {
+                http.Redirect(w, r, "/New_Post", http.StatusMovedPermanently)
                 return
             }
         } 
+
 
         // [start] upload image
         image := GlobVar.DefaultImage
@@ -618,7 +636,6 @@ func HandleNewPost(w http.ResponseWriter, r *http.Request) {
             image = "/Uploads/"+fileHeader.Filename
         }
         
-
 
         isValidInputs := content != "" && len(categories) < 10 && len(content) < 1200
         if isValidInputs && Cruds.InsertPost(data.ID, image, title, content, categories) {
