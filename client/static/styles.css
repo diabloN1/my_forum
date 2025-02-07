@@ -1045,6 +1045,7 @@ select {
 }
 
 /* Style for selected categories */
+/* Style for selected categories */
 #selectedCatDiv {
   margin-top: 0.5rem;
   min-height: 2rem;
@@ -1052,14 +1053,41 @@ select {
   background-color: var(--surface-light);
   border-radius: 4px;
   border: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-#selectedCatDiv span {
+#selectedCatDiv .category-tag {
   background-color: var(--primary);
   color: var(--background);
-  padding: 0.25rem 0.5rem;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.remove-category {
+  background: none;
+  border: none;
+  color: var(--background);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  opacity: 0.8;
+  margin-left: 4px;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.remove-category:hover {
+  opacity: 1;
+}
+
+#selectedCatDiv .category-tag:hover {
+  background-color: var(--primary-glow);
 }
 
 /* Adjust spacing for create post form */
@@ -1204,6 +1232,61 @@ input[type="file"] {
   color: var(--background);
 }
 
+/* Filter actions container */
+.filter-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+}
+
+/* Filter action buttons */
+.filter-action-btn {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.filter-action-btn:hover {
+  background-color: var(--surface-light);
+}
+
+.filter-action-btn i {
+  font-size: 14px;
+}
+
+.filter-action-btn.active {
+  background-color: var(--surface-light);
+  border-color: var(--primary);
+}
+
+/* Ensure proper spacing in filter container */
+#filterContainer {
+  position: relative;
+  padding-top: 64px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.category-tag::first-letter {
+  display: none;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   /* Layout adjustments */
   .container {
@@ -1363,6 +1446,41 @@ input[type="file"] {
   .comment-input {
     min-height: 50px;
     max-height: 150px;
+  }
+
+  .filter-actions {
+    position: static;
+    padding: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .filter-action-btn {
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+  }
+
+  #filterContainer {
+    padding-top: 16px;
+  }
+
+  #filterContainer {
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .filter-action-btn {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 

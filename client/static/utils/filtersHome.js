@@ -3,8 +3,8 @@ const searchInput = document.getElementById("searchInput");
 const categoryFilterButtons = document.getElementById("categoryFilterButtons");
 const filterButton = document.getElementById("filterButton");
 const postsDivs = document.getElementsByClassName("post-card");
-let IsLikedButtonActive = false
-let IsMeButtonActive = false
+let IsLikedButtonActive = false;
+let IsMeButtonActive = false;
 
 // Read and parse json (takes a string and returns the parsed object)
 const postsData = JSON.parse(document.getElementById("postsData").textContent);
@@ -190,9 +190,10 @@ if (postsData) {
       const isTargetedByCategories =
         Object.keys(selectedCategories).length === 0 ||
         post.category.some((cat) => selectedCategories[cat]);
-      
-      const isTargetedByLikedButton = !IsLikedButtonActive || post.is_user_liked
-      const isTargetedByMeButton = !IsMeButtonActive || post.is_user_owned
+
+      const isTargetedByLikedButton =
+        !IsLikedButtonActive || post.is_user_liked;
+      const isTargetedByMeButton = !IsMeButtonActive || post.is_user_owned;
       if (
         isTargetedBySearch &&
         isTragetedByCreationDate &&
@@ -210,16 +211,31 @@ if (postsData) {
     });
   }
 
-  // Liked posts filter
-  document.getElementById('likeFilterButton').addEventListener('click', () => {
-    IsLikedButtonActive = !IsLikedButtonActive
-    showResults()
-  })
+  function toggleButtonStyle(button, isActive) {
+    if (isActive) {
+      button.classList.add("active");
+    } else {
+      button.classList.remove("active");
+    }
+  }
 
-  document.getElementById('meFilterButton').addEventListener('click', () => {
-    IsMeButtonActive = !IsMeButtonActive
-    showResults()
-  })
+  // Liked posts filter
+  document
+    .getElementById("likeFilterButton")
+    .addEventListener("click", (event) => {
+      IsLikedButtonActive = !IsLikedButtonActive;
+      toggleButtonStyle(event.target, IsLikedButtonActive);
+      showResults();
+    });
+
+  // Owned Post filter
+  document
+    .getElementById("meFilterButton")
+    .addEventListener("click", (event) => {
+      IsMeButtonActive = !IsMeButtonActive;
+      toggleButtonStyle(event.target, IsMeButtonActive);
+      showResults();
+    });
 
   // Get min and max creation date
   function fillCreationDateFilterValue() {

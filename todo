@@ -3,10 +3,6 @@ diablo :
 - using the user's email and username
 
 anass :
-- styling.
-- Does the project handle HTTP status 400 - Bad Requests?
-- Handle methods allowed and general errors handling... (const usernameRegex = /^[a-z0-9_]{1,20}$/; ---- const catRegex = /^[a-zA-Z0-9-_]{1,50}$/;)
-- Max len comment makking huge error
 
 hamza :
 - Dockerfile.

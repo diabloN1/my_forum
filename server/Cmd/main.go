@@ -29,22 +29,22 @@ func main() {
 
 	// Public routes
 	http.Handle("/static/", http.StripPrefix("/static", http.HandlerFunc(Handlers.HandleStatic))) // needs error page
-	http.HandleFunc("/", Handlers.HandleIndex)
-	http.HandleFunc("/post/", Handlers.HandlePostPage)
-	http.HandleFunc("/Sign_In", Handlers.HandleSignIn)
-	http.HandleFunc("/Sign_Up", Handlers.HandleSignUp)
-	http.HandleFunc("/api/auth/status", Handlers.HandleAuthStatus)
-	http.HandleFunc("/api/checkEmail", Handlers.HandleIdentifierDisponibility)
-	http.HandleFunc("/api/isValidAuth", Handlers.HandleIsValidCredentials)
+	http.HandleFunc("/", middleware.RateLimiter(Handlers.HandleIndex))
+	http.HandleFunc("/post/", middleware.RateLimiter(Handlers.HandlePostPage))
+	http.HandleFunc("/Sign_In", middleware.RateLimiter(Handlers.HandleSignIn))
+	http.HandleFunc("/Sign_Up", middleware.RateLimiter(Handlers.HandleSignUp))
+	http.HandleFunc("/api/auth/status", middleware.RateLimiter(Handlers.HandleAuthStatus))
+	http.HandleFunc("/api/checkEmail", middleware.RateLimiter(Handlers.HandleIdentifierDisponibility))
+	http.HandleFunc("/api/isValidAuth", middleware.RateLimiter(Handlers.HandleIsValidCredentials))
 	
 
 	// Protected routes
-	http.HandleFunc("/Comment", middleware.ValidateSession(Handlers.HandleComment))
-	http.HandleFunc("/IsLike", middleware.ValidateSession(Handlers.HandleLikeDislike))
-	http.HandleFunc("/Log_Out", middleware.ValidateSession(Handlers.HandleLogOut))
-	http.HandleFunc("/Profile_Account", middleware.ValidateSession(Handlers.HandleProfileAccount))
-	http.HandleFunc("/Update_Profile", middleware.ValidateSession(Handlers.HandleProfileUpdate))
-	http.HandleFunc("/New_Post", middleware.ValidateSession(Handlers.HandleNewPost))
+	http.HandleFunc("/Comment", middleware.RateLimiter(middleware.ValidateSession(Handlers.HandleComment)))
+	http.HandleFunc("/IsLike", middleware.RateLimiter(middleware.ValidateSession(Handlers.HandleLikeDislike)))
+	http.HandleFunc("/Log_Out", middleware.RateLimiter(middleware.ValidateSession(Handlers.HandleLogOut)))
+	http.HandleFunc("/Profile_Account", middleware.RateLimiter(middleware.ValidateSession(Handlers.HandleProfileAccount)))
+	http.HandleFunc("/Update_Profile", middleware.RateLimiter(middleware.ValidateSession(Handlers.HandleProfileUpdate)))
+	http.HandleFunc("/New_Post", middleware.RateLimiter(middleware.ValidateSession(Handlers.HandleNewPost)))
 
 	log.Println("server start: http://localhost:8080/")
 	err := http.ListenAndServe(":8080", nil)

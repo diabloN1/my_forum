@@ -33,6 +33,13 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+func reverseSlice(slice []GlobVar.Post) {
+	n := len(slice)
+	for i := 0; i < n/2; i++ {
+		slice[i], slice[n-1-i] = slice[n-1-i], slice[i]
+	}
+}
+
 func CheckUserInfo(email, password string) bool {
 	user := GetUser(email)
 	if user != nil {
@@ -460,6 +467,7 @@ func GetAllPosts() ([]GlobVar.Post, error) {
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+	reverseSlice(posts)
 	return posts, nil
 }
 
