@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ForumBook - {{.Post.Title}}</title>
-    <link rel="icon" href="../static/public/favicon.png" type="image/png" />
+    <link rel="icon" href="/static/public/favicon.png" type="image/png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
@@ -27,6 +27,13 @@
               <h1 class="post-title">{{.Post.Title}}</h1>
               <p class="post-description">{{.Post.Content}}</p>
               <div class="post-meta">
+                <img
+                  src="{{.User.Image}}"
+                  alt="Profile"
+                  title="{{.User.Name}}"
+                  class="post-profile-avatar"
+                  id="profile-avatar"
+                />
                 <span>Posted by {{.User.Name}}</span>
                 <div class="post-categories">
                   {{range $index, $category := .Post.Categories}}
@@ -44,6 +51,7 @@
                     type="submit"
                     class="action-btn like-btn"
                     data-post-id="{{.Post.ID}}"
+                    id="like-button"
                   >
                     👍 <span class="like-count">{{.Likes}}</span>
                   </button>
@@ -58,6 +66,7 @@
                     type="submit"
                     class="action-btn dislike-btn"
                     data-post-id="{{.Post.ID}}"
+                    id="dislike-button"
                   >
                     👎 <span class="dislike-count">{{.Dislikes}}</span>
                   </button>
@@ -92,7 +101,7 @@
                     type="submit"
                     class="action-btn like-btn"
                     data-post-id="{{.ID}}"
-                    id="like-button"
+                    id="commentlike-button"
                   >
                     👍
                     <span class="like-count">{{.CommentLikes}}</span>
@@ -109,6 +118,7 @@
                     type="submit"
                     class="action-btn dislike-btn"
                     data-post-id="{{.ID}}"
+                    id="commentdislike-button"
                   >
                     👎 <span class="dislike-count">{{.CommentDislikes}}</span>
                   </button>
@@ -136,9 +146,9 @@
       <img alt="Full size image" class="fullscreen-image-content" />
       <button class="close-fullscreen-btn">&times;</button>
     </div>
-    <script src="../static/utils/theme.js"></script>
-    <script type="module" src="../static/utils/liveParser.js"></script>
-    <script src="../static/utils/full-screen-iamge.js"></script>
+    <script src="/static/utils/theme.js"></script>
+    <script type="module" src="/static/utils/liveParser.js"></script>
+    <script src="/static/utils/full-screen-iamge.js"></script>
     <script type="application/json" id="isLiked">
       {{.}}
     </script>
@@ -168,15 +178,34 @@
 
       console.log("DATA:", data);
 
-      if (data && typeof data.Post.is_user_liked !== "undefined") {
-        toggleButtonStyle(
-          document.getElementById("like-button"),
-          data.Post.is_user_liked
-        );
-        console.log(data.Post.is_user_liked);
-      } else {
-        console.error("Invalid data structure:", data.Post.is_user_liked);
-      }
+      const toggleSelectedLikeStyle = (button, isActive) => {
+        if (data && typeof isActive !== "undefined") {
+          toggleButtonStyle(button, isActive);
+          console.log(isActive);
+        } else {
+          console.error("Invalid data structure:", isActive);
+        }
+      };
+      toggleButtonStyle(
+        document.getElementById("like-button"),
+        data.Post.is_user_liked
+      );
+      toggleButtonStyle(
+        document.getElementById("dislike-button"),
+        data.Post.is_user_disliked
+      );
+      console.log(document.getElementsByClassName('comment'))
+      const comments = [...document.getElementsByClassName('comment')]
+      console.log(comments)
+      comments.forEach((comment, index) => {
+      toggleButtonStyle(
+        comment.querySelector('#commentlike-button'),
+        data.Comments[index].is_user_liked
+      )
+      toggleButtonStyle(
+        comment.querySelector('#commentdislike-button'),
+        data.Comments[index].is_user_disliked
+      )});
     </script>
   </body>
 </html>

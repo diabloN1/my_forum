@@ -10,7 +10,7 @@ import (
 var (
 	requests     = make(map[string][]time.Time) 
 	mu           sync.Mutex                     
-	maxRequests  = 5                            
+	maxRequests  = 100                            
 	timeInterval = time.Second                  
 )
 

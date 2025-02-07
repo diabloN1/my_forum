@@ -39,6 +39,7 @@ function updateAuthVisibility(isAuthenticated) {
     });
   }
   document.getElementById("navbar").style.display = ''
+  handlers()
 }
 
 async function checkAuthStatus() {
@@ -66,21 +67,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
-const navLinks = document.querySelector(".nav-links");
+const handlers = () => {
+  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+  const navLinks = document.querySelector(".nav-links");
 
-// Toggle mobile menu
-mobileMenuBtn?.addEventListener("click", () => {
-  navLinks.classList.toggle("mobile-visible");
-});
+  // Toggle mobile menu
+  mobileMenuBtn?.addEventListener("click", () => {
+    navLinks.classList.toggle("mobile-visible");
+  });
 
-const themeToggle = document.querySelector(".theme-toggle");
+  const themeToggle = document.querySelector(".theme-toggle");
 
-// Toggle theme
-themeToggle?.addEventListener("click", () => {
-  const currentTheme = document.documentElement.getAttribute("data-theme");
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
-  themeToggle.textContent = newTheme === "dark" ? "🌙" : "🔆";
-});
+  // Toggle theme
+  themeToggle?.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    themeToggle.textContent = newTheme === "dark" ? "🌙" : "🔆";
+  });
+}
+
+handlers()

@@ -32,6 +32,7 @@ type Post struct {
 	NbrDislike int `json:"nbr_dislike"`
 	IsUserOwned bool `json:"is_user_owned"`
 	IsUserLiked bool `json:"is_user_liked"`
+	IsUserDisliked bool `json:"is_user_disliked"`
 }
 
 type Comment struct {
@@ -44,6 +45,8 @@ type Comment struct {
 	UserName string		`db:"UserName" json:"UserName"`
 	CommentLikes    int `json:"nbr_like"`
 	CommentDislikes int `json:"nbr_dislike"`
+	IsUserLiked bool `json:"is_user_liked"`
+	IsUserDisliked bool `json:"is_user_disliked"`
 }
 
 type Categories struct {

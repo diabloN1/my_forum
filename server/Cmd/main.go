@@ -49,6 +49,7 @@ func main() {
 	log.Println("server start: http://localhost:8080/")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
-		log.Printf("server not listener: %v", err)
+		log.Printf("There was an error serving the port: %v", err)
+		// log.Printf("server not listener: %v", err)
 	}
 }

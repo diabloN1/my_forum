@@ -4,9 +4,9 @@ console.log(inputs)
 inputs.forEach((element) => element.addEventListener("input", function () {
 
     // Enforce max length manually
-    if (element.value.length > maxLength) {
-        element.value = element.value.substring(0, maxLength); // Trim excess
-        value.length = maxLength;
+    if (element.maxLength && element.value.length > element.maxLength) {
+        element.value = element.value.substring(0, element.maxLength); // Trim excess
+        value.length = element.maxLength;
     }
     console.log(element)
 })

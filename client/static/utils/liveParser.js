@@ -1,5 +1,4 @@
 // Prevent back navigation
-
 window.onpopstate = function() {
   // This will be triggered when the back button is pressed
   window.location.href = "http://localhost:8080/"
@@ -63,7 +62,9 @@ forms.forEach(form => form.addEventListener('submit', async (event) => {
         document.documentElement.innerHTML = result
         // Manually re-execute any inline scripts (since the browser doesn't do it automatically)
         const scripts = document.querySelectorAll('script');
-        scripts.forEach((script) => {
+        const jsScript = [...scripts].filter((script) => script.type != "application/json")
+
+        jsScript.forEach((script) => {
           {script.textContent ? eval(script.textContent): null}
           {script.src ? ExecuteExternalJs(script.src): null} 
         });
@@ -101,7 +102,9 @@ posts.forEach((post) => post.addEventListener('click', async () => {
 
   // Manually re-execute any inline scripts (since the browser doesn't do it automatically)
   const scripts = document.querySelectorAll('script');
-  scripts.forEach((script) => {
+  const jsScript = [...scripts].filter((script) => script.type != "application/json")
+  jsScript.forEach((script) => {
+
       {script.textContent ? eval(script.textContent): null}
       {script.src ? ExecuteExternalJs(script.src): null} 
   });

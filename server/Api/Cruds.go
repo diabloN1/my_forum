@@ -1,12 +1,12 @@
 package Cruds
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
-	"strings"
 	"text/template"
 	"time"
 
@@ -234,7 +234,7 @@ func InsertLikeDislike(userId, postId string, isLike bool, isForComment bool) {
 	}
 }
 
-func GetPostComments(postId string) ([]GlobVar.Comment, error) {
+func GetPostComments(postId, userID string) ([]GlobVar.Comment, error) {
 	var comments []GlobVar.Comment
 
 	query := `
@@ -273,6 +273,20 @@ func GetPostComments(postId string) ([]GlobVar.Comment, error) {
 			&comment.UpdatedAt,
 			&comment.UserName,
 		)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
+
+
+		comment.IsUserLiked, err = IsLikedByUser(userID, comment.ID, true, true)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
+		
+		comment.IsUserDisliked, err = IsLikedByUser(userID, comment.ID, false, true)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
 		if err != nil {
 			log.Printf("Error scanning comment row: %v", err)
 			continue
@@ -558,12 +572,12 @@ func GetLikesDislikesByPost(id string, isForComment bool) (int, int, error) {
 	return likes, dislikes, nil
 }
 
-func IsLikedByUser(userId, postId string, isComment bool) (bool, error) {
+func IsLikedByUser(userId, postId string, isLike, isComment bool) (bool, error) {
 
-	query := `SELECT count(*) FROM likeDislike WHERE user_id = ? and post_id = ? and is_comment = ? and is_like = TRUE`
+	query := `SELECT count(*) FROM likeDislike WHERE user_id = ? and post_id = ? and is_like = ? and is_comment = ?`
 
 	var countLiked int
-	err := GlobVar.DB.QueryRow(query, userId, postId, isComment).Scan(&countLiked)
+	err := GlobVar.DB.QueryRow(query, userId, postId, isLike, isComment).Scan(&countLiked)
 	if err != nil {
 		return false, err
 	}
@@ -617,29 +631,41 @@ type Error struct {
 
 // Function to render error pages with an HTTP status code
 func ShowError(w http.ResponseWriter, message string, status int) {
+    fmt.Println("a")
 
-    // Parse the error template
+    // Parse the error template first (before setting headers)
     tmpl, err := template.ParseFiles(filepath.Join(GlobVar.TemplatesPath, "ErrPage.html"))
     if err != nil {
-        // If template parsing fails, fallback to a generic error response
-        ShowError(w, "Could not load error page", http.StatusInternalServerError)
+        // If template parsing fails, use http.Error (this ensures headers aren't overwritten)
+        log.Println("Template parse error:", err)
+        http.Error(w, "Could not load error page", http.StatusInternalServerError)
         return
     }
 
-	// Set the HTTP status code
-    w.WriteHeader(status)
-	
+    fmt.Println("b")
+
+    // Create error object
     httpError := Error{
-        Status: status,
+        Status:  status,
         Message: message,
     }
-    // Execute the template with the error message
-    err = tmpl.Execute(w, httpError)
-	if err != nil {
+
+    // Execute the template first using a buffer
+    var buf bytes.Buffer
+    err = tmpl.Execute(&buf, httpError)
+    if err != nil {
+        fmt.Println("d")
         log.Println("Template execution error:", err)
-        if w.Header().Get("Content-Type") == "" && !strings.Contains(err.Error(), "broken pipe") { 
-            // Ensure no data has been written before calling WriteHeader
-            http.Error(w, "Internal Server Error: Could not render error page", http.StatusInternalServerError)
-        }
+
+        // If execution fails, ensure response is not partially written before using http.Error
+        http.Error(w, "Internal Server Error: Could not render error page", http.StatusInternalServerError)
+        return
     }
+
+    // At this point, template rendering was successful, so we set headers and write response
+    fmt.Println("c")
+    w.WriteHeader(status)
+    _, _ = buf.WriteTo(w) // Write buffer to response
 }
+
+// func contains(s string)  

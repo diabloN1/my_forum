@@ -498,6 +498,14 @@ body {
   color: var(--primary);
 }
 
+.dislike-btn.active {
+  color: var(--primary);
+}
+
+.like-btn.active {
+  color: var(--primary);
+}
+
 /* Profile Styles */
 .profile-container {
   max-width: 800px;
@@ -1240,6 +1248,14 @@ input[type="file"] {
   display: flex;
   gap: 8px;
   padding: 16px;
+}
+
+.post-profile-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary);
 }
 
 /* Filter action buttons */

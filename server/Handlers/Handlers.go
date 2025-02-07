@@ -3,6 +3,7 @@ package Handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -20,13 +21,30 @@ import (
 )
 
 func HandleStatic(w http.ResponseWriter, r *http.Request) {
-    if r.URL.Path == "/" {
+    fmt.Println(AllowedRoutes(r.URL.Path))
+    if !AllowedRoutes(r.URL.Path) {
         Cruds.ShowError(w, "404- Not Found", 404)
         return
     }
 
     fs := http.FileServer(http.Dir(GlobVar.StaticPath))
 	fs.ServeHTTP(w, r)
+}
+
+func AllowedRoutes(path string) bool {
+    file, err := os.Open("../../client/static"+path)
+    if err != nil {
+        return false
+    }
+    defer file.Close()
+
+
+    stat, err := file.Stat()
+    if err != nil || stat.IsDir() {
+        return false
+    }
+
+    return err == nil
 }
 
 func HandleUploads() {
@@ -61,10 +79,10 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    
+    userID := Utils.GetCurrentUserId(r)
 
     // Fetch comments for the post
-    postComments, err := Cruds.GetPostComments(postID)
+    postComments, err := Cruds.GetPostComments(postID, userID)
     if err != nil {
         Cruds.ShowError(w, "Failed to fetch comments", http.StatusInternalServerError)
         return
@@ -76,9 +94,19 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
         Cruds.ShowError(w, "Failed to fetch likes/dislikes", http.StatusInternalServerError)
         return
     }
-    userID := Utils.GetCurrentUserId(r)
 
-    post.IsUserLiked, err = Cruds.IsLikedByUser(userID, postID, false)
+    post.IsUserLiked, err = Cruds.IsLikedByUser(userID, postID, true, false)
+    if err != nil && err != sql.ErrNoRows {
+        Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+    
+    post.IsUserDisliked, err = Cruds.IsLikedByUser(userID, postID, false, false)
+    if err != nil && err != sql.ErrNoRows {
+        Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
     if err != nil && err != sql.ErrNoRows {
         Cruds.ShowError(w, "There was an error fetching posts", http.StatusInternalServerError)       
         return         
@@ -347,6 +375,7 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		Cruds.ShowError(w, "404", http.StatusNotFound)
 		return
 	}
+    fmt.Println(1)
 	if r.Method != http.MethodGet {
 		Cruds.ShowError(w, "405", http.StatusMethodNotAllowed)
 		return
@@ -359,14 +388,9 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
     // Retrieve the user ID from the cookie
-    cookie, _ := r.Cookie("Session_ID")
-    userID := ""
-    if cookie != nil {
-        // Validate the session ID and get the user ID
-        sessionID := cookie.Value
-        userID, _ = Cruds.ValidateSessionIDAndGetUserID(sessionID)
-    }
+    userID := Utils.GetCurrentUserId(r)
 
+    fmt.Println(2)
 	if len(posts) > 0 {
 		for i := range posts {
 			//user
@@ -393,25 +417,31 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
                 posts[i].IsUserOwned = true
             }
 
-            posts[i].IsUserLiked, err = Cruds.IsLikedByUser(userID, posts[i].ID, false)
+            posts[i].IsUserLiked, err = Cruds.IsLikedByUser(userID, posts[i].ID, true, false)
             if err != nil && err != sql.ErrNoRows {
                 Cruds.ShowError(w, "There was an error fetching posts", http.StatusInternalServerError)       
                 return         
             }
 		}
 	}
+    fmt.Println(3)
 
 	tmpl, err := template.ParseFiles(filepath.Join(GlobVar.TemplatesPath, "index.html"))
 	if err != nil {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+
+    fmt.Println(4)
     
 	err = tmpl.Execute(w, posts)
+    fmt.Println(5)
 	if err != nil {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
         return
 	}
+
+    fmt.Println(6)
 }
 
 func HandleProfileAccount(w http.ResponseWriter, r *http.Request) {
