@@ -4,24 +4,6 @@ document.documentElement.setAttribute("data-theme", theme);
 
 
 function initializeNavbar() {
-  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
-  const navLinks = document.querySelector(".nav-links");
-  const themeToggle = document.querySelector(".theme-toggle");
-
-  // Toggle mobile menu
-  mobileMenuBtn?.addEventListener("click", () => {
-    navLinks.classList.toggle("mobile-visible");
-  });
-
-  // Toggle theme
-  themeToggle?.addEventListener("click", () => {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-    themeToggle.textContent = newTheme === "dark" ? "🌙" : "🔆";
-  });
-
   // Check authentication status and update navbar
   checkAuthStatus().then((isAuthenticated) => {
     updateAuthVisibility(isAuthenticated);
@@ -72,10 +54,33 @@ async function checkAuthStatus() {
     return false;
   }
 }
-// Load navbar
-fetch("/static/components/navbar.html")
-  .then((response) => response.text())
-  .then((html) => {
-    document.getElementById("navbar-placeholder").innerHTML = html;
-    initializeNavbar();
+
+// Load data on first load 
+document.addEventListener("DOMContentLoaded", () => {
+  // Load navbar
+  fetch("/static/components/navbar.html")
+    .then((response) => response.text())
+    .then((html) => {
+      document.getElementById("navbar-placeholder").innerHTML = html;
+      initializeNavbar();
+  });
+});
+
+const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+const navLinks = document.querySelector(".nav-links");
+
+// Toggle mobile menu
+mobileMenuBtn?.addEventListener("click", () => {
+  navLinks.classList.toggle("mobile-visible");
+});
+
+const themeToggle = document.querySelector(".theme-toggle");
+
+// Toggle theme
+themeToggle?.addEventListener("click", () => {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+  themeToggle.textContent = newTheme === "dark" ? "🌙" : "🔆";
 });

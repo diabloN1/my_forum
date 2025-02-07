@@ -1,12 +1,12 @@
 package Cruds
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -617,28 +617,29 @@ type Error struct {
 
 // Function to render error pages with an HTTP status code
 func ShowError(w http.ResponseWriter, message string, status int) {
+
     // Parse the error template
     tmpl, err := template.ParseFiles(filepath.Join(GlobVar.TemplatesPath, "ErrPage.html"))
     if err != nil {
-        http.Error(w, "Could not load error page", http.StatusInternalServerError)
+        // If template parsing fails, fallback to a generic error response
+        ShowError(w, "Could not load error page", http.StatusInternalServerError)
         return
     }
 
+	// Set the HTTP status code
+    w.WriteHeader(status)
+	
     httpError := Error{
-        Status:  status,
+        Status: status,
         Message: message,
     }
-
-    // Use a buffer to prevent partial writes in case of an error
-    var buf bytes.Buffer
-    err = tmpl.Execute(&buf, httpError)
-    if err != nil {
-        http.Error(w, "Internal Server Error: Could not render error page", http.StatusInternalServerError)
-        return
+    // Execute the template with the error message
+    err = tmpl.Execute(w, httpError)
+	if err != nil {
+        log.Println("Template execution error:", err)
+        if w.Header().Get("Content-Type") == "" && !strings.Contains(err.Error(), "broken pipe") { 
+            // Ensure no data has been written before calling WriteHeader
+            http.Error(w, "Internal Server Error: Could not render error page", http.StatusInternalServerError)
+        }
     }
-
-    // Write status and body only after ensuring template execution succeeded
-    w.WriteHeader(status)
-    _, _ = w.Write(buf.Bytes())
 }
-
