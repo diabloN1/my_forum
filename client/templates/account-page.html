@@ -10,6 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script src="/static/utils/theme.js"></script>
   </head>
   <body>
     <div id="navbar-placeholder"></div>
@@ -64,13 +65,5 @@
         </div>
       </div>
     </div>
-
-    <script type="application/json" id="postsData">
-      {{.}}
-    </script>
-    <script type="module">
-      console.log(document.getElementById('postsData').innerHTML)
-    </script>
-    <script src="/static/utils/theme.js"></script>
   </body>
 </html>

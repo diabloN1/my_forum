@@ -107,11 +107,6 @@ func HandlePostPage(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if err != nil && err != sql.ErrNoRows {
-        Cruds.ShowError(w, "There was an error fetching posts", http.StatusInternalServerError)       
-        return         
-    }
-
 
     // Prepare the data to be passed to the template
     data := struct {
@@ -330,8 +325,8 @@ func HandleSignUp(w http.ResponseWriter, r *http.Request) {
         usernameRegex := regexp.MustCompile(`^[a-z0-9_]{1,20}$`)
         isValidEmail := u1 == nil && emailRegxp.MatchString(email) && email != "" && len(password) < 20
         isValidName := u2 == nil && !strings.Contains(name, "@") && !strings.Contains(name, " ") && name != "" && len(name) < 20 && usernameRegex.MatchString(name)
-        isValidPassword := len(password) < 8 || password != passwordConfirmation || len(password) > 20 || len(passwordConfirmation) > 20
-        if !isValidName || !isValidEmail || isValidPassword {
+        isNotValidPassword := len([]rune(password)) < 8 || password != passwordConfirmation || len(password) > 20 || len(passwordConfirmation) > 20
+        if !isValidName || !isValidEmail || isNotValidPassword {
             http.Redirect(w, r, "/Sign_Up", http.StatusSeeOther)       
             return
         }
@@ -375,7 +370,6 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		Cruds.ShowError(w, "404", http.StatusNotFound)
 		return
 	}
-    fmt.Println(1)
 	if r.Method != http.MethodGet {
 		Cruds.ShowError(w, "405", http.StatusMethodNotAllowed)
 		return
@@ -390,7 +384,6 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
     // Retrieve the user ID from the cookie
     userID := Utils.GetCurrentUserId(r)
 
-    fmt.Println(2)
 	if len(posts) > 0 {
 		for i := range posts {
 			//user
@@ -424,7 +417,6 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
             }
 		}
 	}
-    fmt.Println(3)
 
 	tmpl, err := template.ParseFiles(filepath.Join(GlobVar.TemplatesPath, "index.html"))
 	if err != nil {
@@ -432,16 +424,12 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    fmt.Println(4)
-    
 	err = tmpl.Execute(w, posts)
-    fmt.Println(5)
 	if err != nil {
 		Cruds.ShowError(w, "Internal server error", http.StatusInternalServerError)
         return
 	}
 
-    fmt.Println(6)
 }
 
 func HandleProfileAccount(w http.ResponseWriter, r *http.Request) {
@@ -715,7 +703,7 @@ func Set_Cookies_Handler(w http.ResponseWriter, r *http.Request, userID string) 
 	}
 
 	// Set the session cookie
-	cookie := &http.Cookie{
+	cookie := &http.Cookie {
 		Name:     "Session_ID",
 		Value:    sessionID,
 		Path:     "/",

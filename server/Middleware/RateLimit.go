@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	Cruds "forum/Api"
 	"net/http"
 	"sync"
@@ -10,7 +11,7 @@ import (
 var (
 	requests     = make(map[string][]time.Time) 
 	mu           sync.Mutex                     
-	maxRequests  = 100                            
+	maxRequests  = 7                  
 	timeInterval = time.Second                  
 )
 
@@ -25,6 +26,7 @@ func RateLimiter(next http.HandlerFunc) http.HandlerFunc {
 		now := time.Now()
 		timestamps := requests[ip]
 
+		fmt.Println(requests)
 		var newTimestamps []time.Time
 		for _, t := range timestamps {
 			if now.Sub(t) < timeInterval {

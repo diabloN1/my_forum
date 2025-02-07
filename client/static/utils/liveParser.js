@@ -103,11 +103,12 @@ posts.forEach((post) => post.addEventListener('click', async () => {
   // Manually re-execute any inline scripts (since the browser doesn't do it automatically)
   const scripts = document.querySelectorAll('script');
   const jsScript = [...scripts].filter((script) => script.type != "application/json")
-  jsScript.forEach((script) => {
 
+  jsScript.forEach((script) => {
       {script.textContent ? eval(script.textContent): null}
       {script.src ? ExecuteExternalJs(script.src): null} 
   });
+  
   document.getElementById('navbar-placeholder').innerHTML = nav
 }
 ))
