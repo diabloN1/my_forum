@@ -33,9 +33,9 @@ func main() {
 	http.HandleFunc("/post/", middleware.RateLimiter(Handlers.HandlePostPage))
 	http.HandleFunc("/Sign_In", middleware.RateLimiter(Handlers.HandleSignIn))
 	http.HandleFunc("/Sign_Up", middleware.RateLimiter(Handlers.HandleSignUp))
-	http.HandleFunc("/api/auth/status", middleware.RateLimiter(Handlers.HandleAuthStatus))
+	http.HandleFunc("/api/auth/status", Handlers.HandleAuthStatus)
 	http.HandleFunc("/api/checkEmail", Handlers.HandleIdentifierDisponibility)
-	http.HandleFunc("/api/isValidAuth", middleware.RateLimiter(Handlers.HandleIsValidCredentials))
+	http.HandleFunc("/api/isValidAuth", Handlers.HandleIsValidCredentials)
 	
 
 	// Protected routes
